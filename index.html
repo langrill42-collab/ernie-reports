@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ernie Reports — Let's Play Two!</title>
+<meta name="description" content="Historical analytics and weekly coverage for the Let's Play Two! fantasy baseball league. Est. 2004.">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@300;400;500&family=Oswald:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Styles (order matters: tokens → layout → components) -->
+<link rel="stylesheet" href="src/css/tokens.css">
+<link rel="stylesheet" href="src/css/layout.css">
+<link rel="stylesheet" href="src/css/components.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     NAVIGATION
+     ════════════════════════════════════════════════════════ -->
+<nav class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-brand">
+      <span class="logo">Ernie Reports</span>
+      <span class="byline">Est. 2004</span>
+    </div>
+    <div class="masthead-nav">
+      <a data-page="home">Home</a>
+      <a data-page="managers">Managers</a>
+      <a data-page="matchups">Matchups</a>
+      <a data-page="newsletter">Newsletter</a>
+      <a data-page="history">History</a>
+    </div>
+    <div class="league-toggle">
+      <span class="league-pill active" data-league="lpt">LPT</span>
+      <span class="league-pill" data-league="statesman">Statesman</span>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: HOME
+     ════════════════════════════════════════════════════════ -->
+<div id="page-home">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">2026 Season &mdash; Week 1 Complete</div>
+      <h1 class="hero-title">Let's Play <em>Two!</em></h1>
+      <p class="hero-subtitle">
+        Twenty-three seasons. Twelve managers. One league that refuses to die.
+        Ernie remembers everything&mdash;the dynasties, the heartbreak, and that
+        one trade in 2017 everyone is still mad about.
+      </p>
+      <div class="hero-stats-strip">
+        <div class="hero-stat">
+          <div class="hero-stat-value">23</div>
+          <div class="hero-stat-label">Seasons</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">276</div>
+          <div class="hero-stat-label">Teams</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">6,842</div>
+          <div class="hero-stat-label">Draft Picks</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">12,407</div>
+          <div class="hero-stat-label">Transactions</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">4,236</div>
+          <div class="hero-stat-label">Matchups</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Standings Scoreboard -->
+  <section class="section animate-in">
+    <div class="section-header">
+      <h2 class="section-title">Current Standings</h2>
+      <span class="section-subtitle">Week 1 &middot; 2026</span>
+    </div>
+
+    <div class="scoreboard">
+      <div class="scoreboard-title">Let's Play Two! &mdash; Head-to-Head Categories</div>
+      <div class="scoreboard-row cols-5 header">
+        <span>Manager</span>
+        <span style="text-align:right">W-L-T</span>
+        <span style="text-align:right">Elo</span>
+        <span style="text-align:right">Streak</span>
+        <span style="text-align:center">Rk</span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Ryan</span>
+        <span class="sb-val bright">1-0-0</span>
+        <span class="sb-val">1584</span>
+        <span class="sb-val streak-w">W1</span>
+        <span class="sb-val"><span class="sb-rank top">1</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Drew</span>
+        <span class="sb-val bright">1-0-0</span>
+        <span class="sb-val">1552</span>
+        <span class="sb-val streak-w">W1</span>
+        <span class="sb-val"><span class="sb-rank top">2</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Jake</span>
+        <span class="sb-val bright">1-0-0</span>
+        <span class="sb-val">1501</span>
+        <span class="sb-val streak-w">W1</span>
+        <span class="sb-val"><span class="sb-rank top">3</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Cory</span>
+        <span class="sb-val">1-0-0</span>
+        <span class="sb-val">1488</span>
+        <span class="sb-val">W1</span>
+        <span class="sb-val"><span class="sb-rank mid">4</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Jon</span>
+        <span class="sb-val">1-0-0</span>
+        <span class="sb-val">1476</span>
+        <span class="sb-val">W1</span>
+        <span class="sb-val"><span class="sb-rank mid">5</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Casey</span>
+        <span class="sb-val">1-0-0</span>
+        <span class="sb-val">1459</span>
+        <span class="sb-val">W1</span>
+        <span class="sb-val"><span class="sb-rank mid">6</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Jeremy</span>
+        <span class="sb-val dim">0-1-0</span>
+        <span class="sb-val">1442</span>
+        <span class="sb-val streak-l">L1</span>
+        <span class="sb-val"><span class="sb-rank mid">7</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Brian</span>
+        <span class="sb-val dim">0-1-0</span>
+        <span class="sb-val">1435</span>
+        <span class="sb-val streak-l">L1</span>
+        <span class="sb-val"><span class="sb-rank mid">8</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">Greg</span>
+        <span class="sb-val dim">0-1-0</span>
+        <span class="sb-val">1410</span>
+        <span class="sb-val streak-l">L1</span>
+        <span class="sb-val"><span class="sb-rank bottom">9</span></span>
+      </div>
+      <div class="scoreboard-row cols-5">
+        <span class="sb-name">David</span>
+        <span class="sb-val dim">0-1-0</span>
+        <span class="sb-val">1388</span>
+        <span class="sb-val streak-l">L1</span>
+        <span class="sb-val"><span class="sb-rank bottom">10</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Elo Power Rankings -->
+  <section class="section animate-in">
+    <div class="section-header">
+      <h2 class="section-title">Elo Power Rankings</h2>
+      <span class="section-subtitle">All-Time &middot; Since 2009</span>
+    </div>
+
+    <div class="elo-timeline stagger">
+      <div class="elo-row">
+        <span class="elo-name">Ryan</span>
+        <span class="elo-current">1584</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:92%; background: linear-gradient(90deg, var(--board), var(--board-dim))"></div>
+          <div class="elo-bar-peak" style="left:96%"></div>
+        </div>
+        <span class="elo-peak">pk 1612</span>
+      </div>
+      <div class="elo-row">
+        <span class="elo-name">Drew</span>
+        <span class="elo-current">1552</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:84%; background: linear-gradient(90deg, var(--board), var(--board-dim))"></div>
+          <div class="elo-bar-peak" style="left:89%"></div>
+        </div>
+        <span class="elo-peak">pk 1588</span>
+      </div>
+      <div class="elo-row">
+        <span class="elo-name">Jake</span>
+        <span class="elo-current">1501</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:71%; background: linear-gradient(90deg, var(--amber-dim), var(--amber))"></div>
+          <div class="elo-bar-peak" style="left:78%"></div>
+        </div>
+        <span class="elo-peak">pk 1545</span>
+      </div>
+      <div class="elo-row">
+        <span class="elo-name">Cory</span>
+        <span class="elo-current">1488</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:67%; background: linear-gradient(90deg, var(--amber-dim), var(--amber))"></div>
+          <div class="elo-bar-peak" style="left:72%"></div>
+        </div>
+        <span class="elo-peak">pk 1530</span>
+      </div>
+      <div class="elo-row">
+        <span class="elo-name">Jon</span>
+        <span class="elo-current">1476</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:63%; background: linear-gradient(90deg, var(--amber-dim), var(--amber))"></div>
+          <div class="elo-bar-peak" style="left:70%"></div>
+        </div>
+        <span class="elo-peak">pk 1521</span>
+      </div>
+      <div class="elo-row">
+        <span class="elo-name">Casey</span>
+        <span class="elo-current">1459</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:55%; background: linear-gradient(90deg, var(--amber-dim), var(--amber))"></div>
+          <div class="elo-bar-peak" style="left:58%"></div>
+        </div>
+        <span class="elo-peak">pk 1478</span>
+      </div>
+      <div class="elo-row">
+        <span class="elo-name">Greg</span>
+        <span class="elo-current">1410</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:45%; background: linear-gradient(90deg, var(--clay), var(--clay-light))"></div>
+          <div class="elo-bar-peak" style="left:62%"></div>
+        </div>
+        <span class="elo-peak">pk 1498</span>
+      </div>
+      <div class="elo-row">
+        <span class="elo-name">David</span>
+        <span class="elo-current">1388</span>
+        <div class="elo-bar-track">
+          <div class="elo-bar-fill" style="width:38%; background: linear-gradient(90deg, var(--clay), var(--clay-light))"></div>
+          <div class="elo-bar-peak" style="left:50%"></div>
+        </div>
+        <span class="elo-peak">pk 1462</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider ornate">
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: MANAGERS
+     ════════════════════════════════════════════════════════ -->
+<div id="page-managers" style="display:none">
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Manager Profiles</h2>
+      <span class="section-subtitle">Scouting Reports</span>
+    </div>
+
+    <div class="manager-grid stagger">
+      <!-- Card: Ryan -->
+      <div class="manager-card">
+        <div class="manager-card-header">
+          <div class="manager-card-rank">#1</div>
+          <div class="manager-card-name">Ryan</div>
+          <div class="manager-card-meta">23 Seasons &middot; Avg Rank #3.2 &middot; Elo 1584</div>
+        </div>
+        <div class="manager-card-body">
+          <div class="manager-card-stats">
+            <div class="mc-stat"><div class="mc-stat-val">.741</div><div class="mc-stat-label">Draft</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.688</div><div class="mc-stat-label">Mgmt</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.712</div><div class="mc-stat-label">Composite</div></div>
+          </div>
+          <div class="quality-bar-label">Draft Quality</div>
+          <div class="quality-bar"><div class="quality-bar-fill draft" style="width:74%"></div></div>
+          <div class="quality-bar-label">Management</div>
+          <div class="quality-bar"><div class="quality-bar-fill mgmt" style="width:69%"></div></div>
+          <div class="manager-card-scouting">
+            "The professor. Drafts with a spreadsheet and a plan, works the wire
+            like a day job. Has the most seasons and the most consistent results.
+            The one everyone's trying to beat."
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Drew -->
+      <div class="manager-card">
+        <div class="manager-card-header">
+          <div class="manager-card-rank">#2</div>
+          <div class="manager-card-name">Drew</div>
+          <div class="manager-card-meta">18 Seasons &middot; Avg Rank #4.1 &middot; Elo 1552</div>
+        </div>
+        <div class="manager-card-body">
+          <div class="manager-card-stats">
+            <div class="mc-stat"><div class="mc-stat-val">.698</div><div class="mc-stat-label">Draft</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.721</div><div class="mc-stat-label">Mgmt</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.705</div><div class="mc-stat-label">Composite</div></div>
+          </div>
+          <div class="quality-bar-label">Draft Quality</div>
+          <div class="quality-bar"><div class="quality-bar-fill draft" style="width:70%"></div></div>
+          <div class="quality-bar-label">Management</div>
+          <div class="quality-bar"><div class="quality-bar-fill mgmt" style="width:72%"></div></div>
+          <div class="manager-card-scouting">
+            "The rival. Quietly brilliant in-season management. Will send you a
+            trade offer at 2am on a Tuesday and somehow win it. Never stops scheming."
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Greg -->
+      <div class="manager-card">
+        <div class="manager-card-header">
+          <div class="manager-card-rank">#9</div>
+          <div class="manager-card-name">Greg</div>
+          <div class="manager-card-meta">15 Seasons &middot; Avg Rank #5.8 &middot; Elo 1410</div>
+        </div>
+        <div class="manager-card-body">
+          <div class="manager-card-stats">
+            <div class="mc-stat"><div class="mc-stat-val">.612</div><div class="mc-stat-label">Draft</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.534</div><div class="mc-stat-label">Mgmt</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.571</div><div class="mc-stat-label">Composite</div></div>
+          </div>
+          <div class="quality-bar-label">Draft Quality</div>
+          <div class="quality-bar"><div class="quality-bar-fill draft" style="width:61%"></div></div>
+          <div class="quality-bar-label">Management</div>
+          <div class="quality-bar"><div class="quality-bar-fill mgmt" style="width:53%"></div></div>
+          <div class="manager-card-scouting">
+            "The lovable underdog. Has been in this league long enough to have
+            opinions about everything and a championship to show for none of it.
+            Drafts with his heart. God bless him."
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Jake -->
+      <div class="manager-card">
+        <div class="manager-card-header">
+          <div class="manager-card-rank">#3</div>
+          <div class="manager-card-name">Jake</div>
+          <div class="manager-card-meta">12 Seasons &middot; Avg Rank #4.5 &middot; Elo 1501</div>
+        </div>
+        <div class="manager-card-body">
+          <div class="manager-card-stats">
+            <div class="mc-stat"><div class="mc-stat-val">.665</div><div class="mc-stat-label">Draft</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.692</div><div class="mc-stat-label">Mgmt</div></div>
+            <div class="mc-stat"><div class="mc-stat-val">.678</div><div class="mc-stat-label">Composite</div></div>
+          </div>
+          <div class="quality-bar-label">Draft Quality</div>
+          <div class="quality-bar"><div class="quality-bar-fill draft" style="width:67%"></div></div>
+          <div class="quality-bar-label">Management</div>
+          <div class="quality-bar"><div class="quality-bar-fill mgmt" style="width:69%"></div></div>
+          <div class="manager-card-scouting">
+            "The ascender. Steady improvement year over year. Not flashy,
+            not loud, just a guy who keeps getting better and making everyone
+            nervous about it."
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: MATCHUPS
+     ════════════════════════════════════════════════════════ -->
+<div id="page-matchups" style="display:none">
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Week 1 Matchups</h2>
+      <span class="section-subtitle">2026 Season</span>
+    </div>
+
+    <div class="matchup-stack">
+      <!-- Ryan vs Greg -->
+      <div class="matchup-card animate-in">
+        <div class="matchup-card-main">
+          <div class="matchup-team">
+            <div class="matchup-team-name">Ryan</div>
+            <div class="matchup-team-record">1-0-0 &middot; #1</div>
+          </div>
+          <div class="matchup-score">
+            <span class="matchup-score-num winner">8</span>
+            <span class="matchup-score-divider">&mdash;</span>
+            <span class="matchup-score-num loser">4</span>
+          </div>
+          <div class="matchup-team away">
+            <div class="matchup-team-name">Greg</div>
+            <div class="matchup-team-record">0-1-0 &middot; #9</div>
+          </div>
+        </div>
+        <div class="matchup-categories">
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip tied"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+        </div>
+        <div class="matchup-detail">
+          <span><span class="matchup-detail-label">Ryan won:</span> R, HR, RBI, OBP, SLG, K, WHIP, QS</span>
+          <span><span class="matchup-detail-label">Greg won:</span> NSB, ERA, NSVH</span>
+          <span><span class="matchup-detail-label">Tied:</span> K/BB</span>
+        </div>
+      </div>
+
+      <!-- Drew vs Jeremy -->
+      <div class="matchup-card animate-in">
+        <div class="matchup-card-main">
+          <div class="matchup-team">
+            <div class="matchup-team-name">Drew</div>
+            <div class="matchup-team-record">1-0-0 &middot; #2</div>
+          </div>
+          <div class="matchup-score">
+            <span class="matchup-score-num winner">7</span>
+            <span class="matchup-score-divider">&mdash;</span>
+            <span class="matchup-score-num loser">5</span>
+          </div>
+          <div class="matchup-team away">
+            <div class="matchup-team-name">Jeremy</div>
+            <div class="matchup-team-record">0-1-0 &middot; #7</div>
+          </div>
+        </div>
+        <div class="matchup-categories">
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+        </div>
+        <div class="matchup-detail">
+          <span><span class="matchup-detail-label">Drew won:</span> R, RBI, OBP, NSB, K, WHIP, QS</span>
+          <span><span class="matchup-detail-label">Jeremy won:</span> HR, SLG, ERA, K/BB, NSVH</span>
+        </div>
+      </div>
+
+      <!-- Jake vs Brian -->
+      <div class="matchup-card animate-in">
+        <div class="matchup-card-main">
+          <div class="matchup-team">
+            <div class="matchup-team-name">Jake</div>
+            <div class="matchup-team-record">1-0-0 &middot; #3</div>
+          </div>
+          <div class="matchup-score">
+            <span class="matchup-score-num winner">7</span>
+            <span class="matchup-score-divider">&mdash;</span>
+            <span class="matchup-score-num loser">4</span>
+          </div>
+          <div class="matchup-team away">
+            <div class="matchup-team-name">Brian</div>
+            <div class="matchup-team-record">0-1-0 &middot; #8</div>
+          </div>
+        </div>
+        <div class="matchup-categories">
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip tied"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+        </div>
+        <div class="matchup-detail">
+          <span><span class="matchup-detail-label">Jake won:</span> R, HR, OBP, SLG, K, WHIP, QS</span>
+          <span><span class="matchup-detail-label">Brian won:</span> RBI, NSB, ERA, K/BB</span>
+          <span><span class="matchup-detail-label">Tied:</span> NSVH</span>
+        </div>
+      </div>
+
+      <!-- Cory vs David -->
+      <div class="matchup-card animate-in">
+        <div class="matchup-card-main">
+          <div class="matchup-team">
+            <div class="matchup-team-name">Cory</div>
+            <div class="matchup-team-record">1-0-0 &middot; #4</div>
+          </div>
+          <div class="matchup-score">
+            <span class="matchup-score-num winner">8</span>
+            <span class="matchup-score-divider">&mdash;</span>
+            <span class="matchup-score-num loser">3</span>
+          </div>
+          <div class="matchup-team away">
+            <div class="matchup-team-name">David</div>
+            <div class="matchup-team-record">0-1-0 &middot; #10</div>
+          </div>
+        </div>
+        <div class="matchup-categories">
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip tied"></div>
+          <div class="cat-pip away"></div>
+        </div>
+        <div class="matchup-detail">
+          <span><span class="matchup-detail-label">Cory won:</span> R, HR, RBI, OBP, SLG, K, WHIP, QS</span>
+          <span><span class="matchup-detail-label">David won:</span> NSB, ERA, NSVH</span>
+          <span><span class="matchup-detail-label">Tied:</span> K/BB</span>
+        </div>
+      </div>
+
+      <!-- Jon vs Casey -->
+      <div class="matchup-card animate-in">
+        <div class="matchup-card-main">
+          <div class="matchup-team">
+            <div class="matchup-team-name">Jon</div>
+            <div class="matchup-team-record">1-0-0 &middot; #5</div>
+          </div>
+          <div class="matchup-score">
+            <span class="matchup-score-num winner">7</span>
+            <span class="matchup-score-divider">&mdash;</span>
+            <span class="matchup-score-num loser">5</span>
+          </div>
+          <div class="matchup-team away">
+            <div class="matchup-team-name">Casey</div>
+            <div class="matchup-team-record">0-1-0 &middot; #6</div><!-- intentional: Casey lost but ranked higher on tiebreak -->
+          </div>
+        </div>
+        <div class="matchup-categories">
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+          <div class="cat-pip away"></div>
+          <div class="cat-pip home"></div>
+        </div>
+        <div class="matchup-detail">
+          <span><span class="matchup-detail-label">Jon won:</span> R, RBI, SLG, NSB, K, WHIP, QS</span>
+          <span><span class="matchup-detail-label">Casey won:</span> HR, OBP, ERA, K/BB, NSVH</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: NEWSLETTER
+     ════════════════════════════════════════════════════════ -->
+<div id="page-newsletter" style="display:none">
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">The Newsletter</h2>
+      <span class="section-subtitle">Ernie's Weekly Column</span>
+    </div>
+
+    <div class="newsletter-card animate-in">
+      <div class="newsletter-header">
+        <div class="newsletter-edition">Vol. XXIII &middot; Week 1 &middot; April 2026</div>
+        <h2 class="newsletter-headline">Ryan Opens Title Defense With a Statement; Greg Opens His Season With Whatever the Opposite of a Statement Is</h2>
+      </div>
+      <div class="newsletter-body">
+        <p class="dropcap">Listen, I've been covering this league since Bush was president&mdash;the first time, not the second time, and certainly not whatever we're doing now&mdash;and I can tell you that Week 1 never means anything. Except when it does. And this week? It might mean something.</p>
+
+        <p>Ryan rolled into the 2026 season the way Ryan rolls into every season: with a plan, a spreadsheet, and the quiet confidence of a man who has won this thing before and knows he'll win it again. An 8-4 demolition of Greg isn't surprising. What's surprising is that Greg managed to win four categories. NSB, ERA, and NSVH&mdash;the three categories that most clearly say "my hitters aren't doing anything so at least my bullpen showed up."</p>
+
+        <div class="newsletter-pull-quote">
+          "Twenty-three seasons in, and Greg still drafts like a man who
+          believes in miracles. Admirable, really. Misguided, but admirable."
+        </div>
+
+        <p>Meanwhile, Drew handled Jeremy 7-5 in a matchup that was closer than it should have been. Drew's pitching was characteristically stingy&mdash;the man hoards Ks and QS like a dragon sitting on a pile of gold&mdash;but Jeremy's power numbers kept it interesting. Five categories from a team most people had penciled in for the bottom third? Jeremy might actually be dangerous this year. Or it might be Week 1 noise. Ernie has seen this movie before.</p>
+
+        <p>The real story of the week might be Jake's 7-4 win over Brian. Jake's been steadily climbing the Elo rankings for three years now, and an opening-week win over a veteran like Brian&mdash;complete with dominant hitting across four categories&mdash;suggests the climb isn't done yet. Brian, for his part, looked like a man still figuring out his roster. Four categories won on vibes and relievers. Classic early-season Brian.</p>
+
+        <p>And then there's Cory. An 8-3 win over David is the kind of opening statement that makes people pay attention. Cory's always had the tools&mdash;he drafts well, he works the wire&mdash;but he's never quite put a full season together. This could be the year. Or it could be the same thing we say every April. Either way, David's going to need more than three categories a week to survive in this league.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: HISTORY
+     ════════════════════════════════════════════════════════ -->
+<div id="page-history" style="display:none">
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">League History</h2>
+      <span class="section-subtitle">The Complete Record</span>
+    </div>
+
+    <div class="two-col">
+      <div class="timeline stagger">
+        <div class="timeline-node active">
+          <div class="timeline-year">2026</div>
+          <div class="timeline-event">
+            <span class="timeline-champ">Season in progress</span>&mdash;Week 1 complete.
+            Let's Play Two! enters its 23rd season.
+          </div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-year">2025</div>
+          <div class="timeline-event">
+            <span class="timeline-champ">Champion: Ryan</span>&mdash;dominated wire-to-wire.
+            Drew finished 2nd for the third time in five years.
+          </div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-year">2024</div>
+          <div class="timeline-event">
+            <span class="timeline-champ">Champion: Drew</span>&mdash;finally broke through.
+            The newsletter launched mid-season. Ernie has opinions about everyone.
+          </div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-year">2023</div>
+          <div class="timeline-event">
+            <span class="timeline-champ">Champion: Ryan</span>&mdash;back-to-back threat begins.
+            David joins the league. Immediately regrets it.
+          </div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-year">2022</div>
+          <div class="timeline-event">
+            <span class="timeline-champ">Champion: Jake</span>&mdash;breakout year.
+            Casey joins. Names his team Tungsten Arm O'Doyle. Nobody asks.
+          </div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-year">2015</div>
+          <div class="timeline-event">
+            League renamed to <span class="timeline-champ">Let's Play Two!</span>&mdash;the
+            name that stuck. The Ernie Banks era begins.
+          </div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-year">2009</div>
+          <div class="timeline-event">
+            Head-to-head categories begin. The modern era of rivalries,
+            weekly trash talk, and actual stakes.
+          </div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-year">2004</div>
+          <div class="timeline-event">
+            <span class="timeline-champ">Oakland Owns Boston</span>&mdash;the league is born.
+            A simpler time. Roto scoring. Nobody knew what they were doing.
+            Most still don't.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="scoreboard" style="position:sticky; top:80px;">
+          <div class="scoreboard-title">All-Time Championships</div>
+          <div class="scoreboard-row" style="grid-template-columns: 2fr 0.5fr 1fr 1fr">
+            <span class="sb-name">Ryan</span>
+            <span class="sb-val bright">5</span>
+            <span class="sb-val dim">23 seasons</span>
+            <span class="sb-val dim">21.7%</span>
+          </div>
+          <div class="scoreboard-row" style="grid-template-columns: 2fr 0.5fr 1fr 1fr">
+            <span class="sb-name">Drew</span>
+            <span class="sb-val bright">3</span>
+            <span class="sb-val dim">18 seasons</span>
+            <span class="sb-val dim">16.7%</span>
+          </div>
+          <div class="scoreboard-row" style="grid-template-columns: 2fr 0.5fr 1fr 1fr">
+            <span class="sb-name">Jake</span>
+            <span class="sb-val">2</span>
+            <span class="sb-val dim">12 seasons</span>
+            <span class="sb-val dim">16.7%</span>
+          </div>
+          <div class="scoreboard-row" style="grid-template-columns: 2fr 0.5fr 1fr 1fr">
+            <span class="sb-name">Jon</span>
+            <span class="sb-val">2</span>
+            <span class="sb-val dim">15 seasons</span>
+            <span class="sb-val dim">13.3%</span>
+          </div>
+          <div class="scoreboard-row" style="grid-template-columns: 2fr 0.5fr 1fr 1fr">
+            <span class="sb-name">Cory</span>
+            <span class="sb-val">1</span>
+            <span class="sb-val dim">10 seasons</span>
+            <span class="sb-val dim">10.0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     FOOTER
+     ════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <p>"It's a beautiful day for a ballgame. Let's play two!"</p>
+  <span class="attribution">&mdash; Ernie Banks, 1931&ndash;2015</span>
+</footer>
+
+
+<!-- App Script -->
+<script src="src/js/app.js"></script>
+
+</body>
+</html>
