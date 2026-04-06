@@ -378,6 +378,63 @@ a:hover { color: var(--amber); }
 .hero .hero-stats-strip { opacity: 0; animation: fadeSlideUp var(--duration-slow) ease 0.45s forwards; }
 
 
+/* ── MOBILE HAMBURGER MENU ─────────────────────────────────*/
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-sm);
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+
+@media (max-width: 900px) {
+  .hamburger { display: flex; }
+  .league-toggle { display: none; }
+
+  .masthead-nav {
+    display: none;
+    position: absolute;
+    top: 56px;
+    left: 0; right: 0;
+    background: var(--ink);
+    flex-direction: column;
+    border-bottom: 3px solid var(--amber);
+    padding: var(--space-sm) 0;
+    box-shadow: 0 8px 24px var(--shadow-deep);
+  }
+
+  .masthead-nav.open { display: flex; }
+
+  .masthead-nav a {
+    height: auto;
+    padding: var(--space-sm) var(--space-xl);
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .masthead-nav a.active {
+    border-bottom: none;
+    background: rgba(196, 132, 29, 0.1);
+  }
+}
+
+
 /* ── RESPONSIVE ───────────────────────────────────────────*/
 
 @media (max-width: 900px) {
@@ -387,7 +444,6 @@ a:hover { color: var(--amber); }
 
 @media (max-width: 768px) {
   .masthead-inner { padding: 0 var(--space-md); }
-  .masthead-nav a { padding: 0 var(--space-md); font-size: var(--text-xs); }
   .masthead-brand .byline { display: none; }
 
   .section { padding: var(--space-xl) var(--space-md); }

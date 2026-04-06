@@ -80,6 +80,69 @@
   grid-template-columns: 2fr repeat(3, 1fr) 0.8fr;
 }
 
+/* Interactive rows — hover glow, click for detail */
+.scoreboard-row.interactive {
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-radius: 2px;
+  margin: 0 calc(-1 * var(--space-sm));
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+}
+
+.scoreboard-row.interactive:hover {
+  background: rgba(212, 228, 200, 0.06);
+}
+
+.scoreboard-row.interactive.expanded {
+  background: rgba(212, 228, 200, 0.08);
+}
+
+/* Expandable detail row beneath a scoreboard row */
+.sb-detail {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.35s var(--ease-out), opacity 0.25s ease, padding 0.25s ease;
+  padding: 0 var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--board-dim);
+}
+
+.sb-detail.open {
+  max-height: 200px;
+  opacity: 1;
+  padding: var(--space-sm);
+  border-bottom: 1px solid rgba(212, 228, 200, 0.08);
+}
+
+.sb-detail-inner {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.sb-detail-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sb-detail-stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--board-dim);
+}
+
+.sb-detail-stat-val {
+  color: var(--board-text);
+  font-size: var(--text-sm);
+}
+
 .scoreboard-row.header {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -398,6 +461,71 @@
   font-weight: 500;
 }
 
+/* Click-to-expand toggle */
+.matchup-card { cursor: pointer; }
+
+.matchup-card .matchup-expand-hint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 0 0 var(--space-sm);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.matchup-card:hover .matchup-expand-hint { opacity: 1; }
+
+/* Expandable stat comparison table */
+.matchup-stat-table {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s var(--ease-out);
+  border-top: 1px solid var(--parchment-deep);
+}
+
+.matchup-card.expanded .matchup-stat-table {
+  max-height: 500px;
+}
+
+.matchup-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 70px 70px;
+  padding: var(--space-sm) var(--space-xl);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.matchup-stat-grid.stat-header {
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--parchment-deep);
+  padding-bottom: var(--space-xs);
+}
+
+.matchup-stat-grid .stat-cat {
+  font-family: var(--font-stat);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  padding: 3px 0;
+}
+
+.matchup-stat-grid .stat-val {
+  text-align: right;
+  padding: 3px 0;
+  color: var(--ink-muted);
+}
+
+.matchup-stat-grid .stat-val.won {
+  color: var(--grass);
+  font-weight: 500;
+}
+
+.matchup-stat-grid .stat-val.lost {
+  color: var(--clay);
+}
+
 
 /* ── NEWSLETTER READER ────────────────────────────────────
    Editorial magazine layout for Ernie's weekly column.
@@ -478,10 +606,32 @@
 
 .elo-row {
   display: grid;
-  grid-template-columns: 130px 52px 1fr 52px;
+  grid-template-columns: 110px 48px 1fr 100px 48px;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   padding: var(--space-xs) 0;
+}
+
+/* Sparkline SVG */
+.elo-sparkline {
+  height: 24px;
+  width: 100%;
+}
+
+.elo-sparkline polyline {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.elo-sparkline .spark-area {
+  stroke: none;
+  opacity: 0.08;
+}
+
+.elo-sparkline circle {
+  r: 2.5;
 }
 
 .elo-name {
