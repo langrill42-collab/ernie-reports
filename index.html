@@ -39,6 +39,7 @@
       <a data-page="power">Power Rankings</a>
       <a data-page="wire">The Wire</a>
       <a data-page="newsletter">Newsletter</a>
+      <a data-page="odds">Playoff Odds</a>
       <a data-page="history">History</a>
     </div>
     <div class="league-toggle">
@@ -266,6 +267,23 @@
 <!-- ════════════════════════════════════════════════════════
      PAGE: HISTORY
      ════════════════════════════════════════════════════════ -->
+<div id="page-odds" style="display:none">
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Playoff Odds</h2>
+      <span class="section-subtitle">Model S &middot; 20,000 simulations weekly</span>
+    </div>
+    <p style="max-width:640px;color:var(--ink-muted);margin-bottom:var(--space-md)">
+      Rest-of-season Monte Carlo: each week's odds are computed from what was knowable
+      that week &mdash; records to date, the real remaining schedule, and team quality
+      from weekly category performances. Click legend names to highlight teams; switch
+      metrics for byes, the title, and the Last Derby.
+    </p>
+    <iframe src="playoff-odds.html" title="Interactive playoff odds chart"
+      style="width:100%;height:720px;border:1px solid var(--parchment-deep);border-radius:8px;background:#fcfcfb"></iframe>
+  </section>
+</div>
+
 <div id="page-history" style="display:none">
   <section class="section">
     <div class="section-header">

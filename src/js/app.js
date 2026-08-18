@@ -627,11 +627,34 @@ function renderNewsletter(d) {
     if (!n) return;
 
     // Convert markdown to basic HTML
-    let html = n.content
+    let src = n.content.replace(/<!--[\s\S]*?-->/g, '');  // strip HTML comments
+
+    // Markdown tables -> styled tables (must run before inline formatting)
+    src = src.replace(
+      /((?:^\|.*\|[ \t]*\n)+)/gm,
+      (block) => {
+        const lines = block.trim().split('\n').filter(l => l.trim());
+        if (lines.length < 2 || !/^\|[\s:-]+\|/.test(lines[1].replace(/[^|:\s-]/g, ''))) {
+          // no separator row -> not a table
+          if (!/^\|[-\s|:]+\|$/.test(lines[1] || '')) return block;
+        }
+        const cells = l => l.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+        const head = cells(lines[0]);
+        const rows = lines.slice(2).map(cells);
+        const th = head.map(h => `<th style="text-align:left;padding:6px 10px;border-bottom:2px solid var(--parchment-deep);font-family:var(--font-stat);font-size:var(--text-xs);letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-muted)">${h}</th>`).join('');
+        const tr = rows.map(r => `<tr>${r.map(c => `<td style="padding:5px 10px;border-bottom:1px solid var(--parchment-deep);font-variant-numeric:tabular-nums">${c}</td>`).join('')}</tr>`).join('');
+        return `\n<div style="overflow-x:auto"><table style="border-collapse:collapse;margin:var(--space-md) 0;width:100%">` +
+               `<thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>\n\n`;
+      });
+
+    let html = src
+      .replace(/^#### (.+)$/gm, '<h5 style="font-family:var(--font-display);font-weight:700;margin:var(--space-md) 0 var(--space-xs)">$1</h5>')
       .replace(/^### (.+)$/gm, '<h4 style="font-family:var(--font-display);font-weight:700;margin:var(--space-lg) 0 var(--space-sm)">$1</h4>')
+      .replace(/^## (.+)$/gm, '<h3 style="font-family:var(--font-display);font-weight:700;font-size:var(--text-lg);margin:var(--space-xl) 0 var(--space-sm)">$1</h3>')
+      .replace(/^# (.+)$/gm, '<h2 style="font-family:var(--font-display);font-weight:700;font-size:var(--text-xl);margin:var(--space-xl) 0 var(--space-md)">$1</h2>')
       .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
       .replace(/^---$/gm, '<hr style="border:none;height:1px;background:var(--parchment-deep);margin:var(--space-lg) 0">')
       .replace(/^- (.+)$/gm, '<li style="margin-left:var(--space-lg);margin-bottom:var(--space-xs)">$1</li>')
       .replace(/^\d+\. (.+)$/gm, '<li style="margin-left:var(--space-lg);margin-bottom:var(--space-xs)">$1</li>');
@@ -640,7 +663,8 @@ function renderNewsletter(d) {
     html = html.split('\n\n').map(block => {
       block = block.trim();
       if (!block) return '';
-      if (block.startsWith('<h') || block.startsWith('<hr') || block.startsWith('<li')) return block;
+      if (block.startsWith('<h') || block.startsWith('<hr') || block.startsWith('<li')
+          || block.startsWith('<div') || block.startsWith('<table')) return block;
       return `<p>${block}</p>`;
     }).join('\n');
 
