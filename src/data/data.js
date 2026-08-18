@@ -84868,152 +84868,54 @@ window.ERNIE_DATA = {
     "season_counts": [
       {
         "manager": "Andrew",
-        "moves": 200
+        "moves": 188
       },
       {
         "manager": "Drew",
-        "moves": 194
+        "moves": 182
       },
       {
         "manager": "Greg",
-        "moves": 154
+        "moves": 145
       },
       {
         "manager": "Christopher",
-        "moves": 131
+        "moves": 121
       },
       {
         "manager": "Ryan L",
-        "moves": 107
+        "moves": 101
       },
       {
         "manager": "Jimmy Bowman",
-        "moves": 92
+        "moves": 82
       },
       {
         "manager": "Alex K",
-        "moves": 87
+        "moves": 78
       },
       {
         "manager": "Reid",
-        "moves": 79
+        "moves": 70
       },
       {
         "manager": "Esteban",
-        "moves": 58
+        "moves": 55
       },
       {
         "manager": "David",
-        "moves": 44
+        "moves": 37
       },
       {
         "manager": "Matthew Kelly",
-        "moves": 33
+        "moves": 27
       },
       {
         "manager": "Casey",
-        "moves": 16
+        "moves": 6
       }
     ],
     "recent": [
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Michael McGreevy",
-        "manager": "Greg",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Brady House",
-        "manager": "Casey",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Justin Steele",
-        "manager": "Casey",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Marcell Ozuna",
-        "manager": "Casey",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Mois\u00e9s Ballesteros",
-        "manager": "Ryan L",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Edward Cabrera",
-        "manager": "Alex K",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Justin Wrobleski",
-        "manager": "Andrew",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Agust\u00edn Ram\u00edrez",
-        "manager": "Andrew",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Esmerlyn Valdez",
-        "manager": "Andrew",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Jordan Romano",
-        "manager": "Esteban",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Samad Taylor",
-        "manager": "Reid",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Brady Singer",
-        "manager": "Matthew Kelly",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Caleb Thielbar",
-        "manager": "Matthew Kelly",
-        "timestamp": 1788328800
-      },
-      {
-        "type": "reconciled",
-        "action": "add",
-        "player": "Jorge Polanco",
-        "manager": "David",
-        "timestamp": 1788328800
-      },
       {
         "type": "drop",
         "action": "drop",
@@ -85265,98 +85167,166 @@ window.ERNIE_DATA = {
         "player": "Lawrence Butler",
         "manager": "Christopher",
         "timestamp": 1786091760
+      },
+      {
+        "type": "add/drop",
+        "action": "add",
+        "player": "Osleivis Basabe",
+        "manager": "Christopher",
+        "timestamp": 1786091760
+      },
+      {
+        "type": "add/drop",
+        "action": "drop",
+        "player": "Zac Thornton",
+        "manager": "Christopher",
+        "timestamp": 1786091760
+      },
+      {
+        "type": "add",
+        "action": "add",
+        "player": "Brandon Pfaadt",
+        "manager": "Reid",
+        "timestamp": 1786091760
+      },
+      {
+        "type": "add",
+        "action": "add",
+        "player": "Andre Pallante",
+        "manager": "Reid",
+        "timestamp": 1786091760
+      },
+      {
+        "type": "trade",
+        "action": "trade",
+        "player": "Bryan Woo",
+        "manager": "Christopher",
+        "timestamp": 1786031820
+      },
+      {
+        "type": "drop",
+        "action": "drop",
+        "player": "Brett Baty",
+        "manager": "Matthew Kelly",
+        "timestamp": 1786031820
+      },
+      {
+        "type": "drop",
+        "action": "drop",
+        "player": "Jake Cronenworth",
+        "manager": "Matthew Kelly",
+        "timestamp": 1786031820
+      },
+      {
+        "type": "trade",
+        "action": "trade",
+        "player": "TJ Rumfield",
+        "manager": "Matthew Kelly",
+        "timestamp": 1786031820
+      },
+      {
+        "type": "trade",
+        "action": "trade",
+        "player": "Xavier Edwards",
+        "manager": "Matthew Kelly",
+        "timestamp": 1786031820
+      },
+      {
+        "type": "trade",
+        "action": "trade",
+        "player": "Daylen Lile",
+        "manager": "Matthew Kelly",
+        "timestamp": 1786031820
+      },
+      {
+        "type": "drop",
+        "action": "drop",
+        "player": "Ezequiel Tovar",
+        "manager": "Matthew Kelly",
+        "timestamp": 1786031040
+      },
+      {
+        "type": "drop",
+        "action": "drop",
+        "player": "Brandon Sproat",
+        "manager": "Reid",
+        "timestamp": 1786022100
+      },
+      {
+        "type": "add/drop",
+        "action": "add",
+        "player": "Mason Montgomery",
+        "manager": "Drew",
+        "timestamp": 1785918600
+      },
+      {
+        "type": "add/drop",
+        "action": "drop",
+        "player": "Brandon Pfaadt",
+        "manager": "Drew",
+        "timestamp": 1785918600
       }
     ],
     "career": [
       {
         "manager": "Drew",
-        "moves": 2902,
+        "moves": 2219,
         "seasons": 20
       },
       {
         "manager": "Ryan L",
-        "moves": 1741,
+        "moves": 1338,
         "seasons": 23
       },
       {
-        "manager": "Alex K",
-        "moves": 1724,
-        "seasons": 21
-      },
-      {
         "manager": "Greg",
-        "moves": 1699,
+        "moves": 1286,
         "seasons": 10
       },
       {
-        "manager": "Former manager",
-        "moves": 1390,
-        "seasons": 11
+        "manager": "Alex K",
+        "moves": 1268,
+        "seasons": 21
       },
       {
         "manager": "Reid",
-        "moves": 1118,
+        "moves": 780,
         "seasons": 22
       },
       {
         "manager": "Esteban",
-        "moves": 949,
+        "moves": 706,
         "seasons": 13
       },
       {
         "manager": "Andrew",
-        "moves": 818,
+        "moves": 658,
         "seasons": 4
       },
       {
         "manager": "Mike",
-        "moves": 719,
+        "moves": 519,
         "seasons": 7
       },
       {
         "manager": "Alex T",
-        "moves": 552,
+        "moves": 314,
         "seasons": 10
       },
       {
+        "manager": "Jimmy Bowman",
+        "moves": 312,
+        "seasons": 5
+      },
+      {
         "manager": "Kevin",
-        "moves": 471,
+        "moves": 303,
         "seasons": 15
       },
       {
-        "manager": "Jimmy Bowman",
-        "moves": 446,
-        "seasons": 5
-      },
-      {
         "manager": "David",
-        "moves": 384,
+        "moves": 258,
         "seasons": 4
-      },
-      {
-        "manager": "Matthew Kelly",
-        "moves": 243,
-        "seasons": 5
-      },
-      {
-        "manager": "Margaret",
-        "moves": 231,
-        "seasons": 5
-      },
-      {
-        "manager": "Christopher",
-        "moves": 231,
-        "seasons": 2
-      },
-      {
-        "manager": "David '18",
-        "moves": 219,
-        "seasons": 2
-      },
-      {
-        "manager": "Anna",
-        "moves": 207,
-        "seasons": 6
       },
       {
         "manager": "Gabriel",
@@ -85364,34 +85334,49 @@ window.ERNIE_DATA = {
         "seasons": 5
       },
       {
-        "manager": "charlie",
-        "moves": 195,
-        "seasons": 15
+        "manager": "Christopher",
+        "moves": 185,
+        "seasons": 2
+      },
+      {
+        "manager": "Margaret",
+        "moves": 169,
+        "seasons": 5
+      },
+      {
+        "manager": "Matthew Kelly",
+        "moves": 153,
+        "seasons": 5
+      },
+      {
+        "manager": "David '18",
+        "moves": 149,
+        "seasons": 2
       },
       {
         "manager": "Zachary",
-        "moves": 193,
-        "seasons": 2
+        "moves": 121,
+        "seasons": 1
+      },
+      {
+        "manager": "Anna",
+        "moves": 108,
+        "seasons": 6
       },
       {
         "manager": "Chris",
-        "moves": 163,
+        "moves": 103,
         "seasons": 5
+      },
+      {
+        "manager": "charlie",
+        "moves": 88,
+        "seasons": 12
       },
       {
         "manager": "Timothy",
-        "moves": 137,
+        "moves": 78,
         "seasons": 5
-      },
-      {
-        "manager": "Casey",
-        "moves": 124,
-        "seasons": 5
-      },
-      {
-        "manager": "Jaehong",
-        "moves": 91,
-        "seasons": 2
       },
       {
         "manager": "Jordan",
@@ -85399,28 +85384,28 @@ window.ERNIE_DATA = {
         "seasons": 2
       },
       {
+        "manager": "Jaehong",
+        "moves": 62,
+        "seasons": 2
+      },
+      {
+        "manager": "Casey",
+        "moves": 60,
+        "seasons": 5
+      },
+      {
         "manager": "Casey '18",
-        "moves": 74,
+        "moves": 44,
         "seasons": 3
       },
       {
         "manager": "Sam",
-        "moves": 43,
-        "seasons": 1
-      },
-      {
-        "manager": "Brian",
-        "moves": 32,
-        "seasons": 1
-      },
-      {
-        "manager": "McPaul",
         "moves": 27,
         "seasons": 1
       },
       {
         "manager": "Robert",
-        "moves": 25,
+        "moves": 10,
         "seasons": 1
       },
       {
@@ -85431,6 +85416,11 @@ window.ERNIE_DATA = {
       {
         "manager": "Jackson",
         "moves": 9,
+        "seasons": 1
+      },
+      {
+        "manager": "Brian",
+        "moves": 8,
         "seasons": 1
       }
     ]
