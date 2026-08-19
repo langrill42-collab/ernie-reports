@@ -29,7 +29,7 @@ function renderAll() {
   renderMatchups(d);
   renderDraft(d);
   renderSeasonReplay(d);
-  renderPowerRankings(d);
+  renderRecords(d);
   renderWire(d);
   renderNewsletter(d);
   renderHistory(d);
@@ -93,7 +93,8 @@ function renderStandings(d) {
     const matchRec = s.matchup_record || '';
     const eloRating = e.rating ? Math.round(e.rating) : '—';
     const eloPeak = e.peak ? Math.round(e.peak) : '—';
-    const composite = mgr.composite ? mgr.composite.toFixed(3) : '—';
+    const rv = ((D().rivalries || {}).current || []).find(x => x.name === s.manager) || {};
+    const titles = rv.titles ? '★'.repeat(rv.titles) : '—';
 
     return `<div class="scoreboard-row cols-5 interactive" data-mgr="${s.manager}">
       <span class="sb-name">${s.manager}</span>
@@ -107,7 +108,7 @@ function renderStandings(d) {
         <div class="sb-detail-stat"><span class="sb-detail-stat-label">Matchup</span><span class="sb-detail-stat-val">${matchRec}</span></div>
         <div class="sb-detail-stat"><span class="sb-detail-stat-label">Elo</span><span class="sb-detail-stat-val">${eloRating}</span></div>
         <div class="sb-detail-stat"><span class="sb-detail-stat-label">Peak</span><span class="sb-detail-stat-val">${eloPeak}</span></div>
-        <div class="sb-detail-stat"><span class="sb-detail-stat-label">Composite</span><span class="sb-detail-stat-val">${composite}</span></div>
+        <div class="sb-detail-stat"><span class="sb-detail-stat-label">Titles</span><span class="sb-detail-stat-val">${titles}</span></div>
         <div class="sb-detail-stat"><span class="sb-detail-stat-label">Seasons</span><span class="sb-detail-stat-val">${mgr.seasons || '—'}</span></div>
         <div class="sb-detail-stat"><span class="sb-detail-stat-label">Avg Rank</span><span class="sb-detail-stat-val">#${mgr.avg_rank || '—'}</span></div>
       </div>
@@ -172,40 +173,74 @@ function renderElo(d) {
 
 function renderManagers(d) {
   const el = document.getElementById('managers-grid');
-  if (!el || !d.managers.length) return;
+  const riv = d.rivalries;
+  if (!el || !riv || !riv.current) return;
 
-  // Find Elo for each manager
-  const elo = {};
-  (d.elo || []).forEach(e => elo[e.manager] = Math.round(e.rating));
+  const finishLine = m => m.years.map(y =>
+    `<span title="${y.year}: ${escHtml(y.team)}${y.rank ? ' (#' + y.rank + ')' : ''}"
+       style="display:inline-block;width:14px;text-align:center;font-family:var(--font-mono);
+       font-size:10px;color:${y.rank === 1 ? 'var(--amber)' : y.rank && y.rank <= 3 ? 'var(--ink)' : 'var(--ink-muted)'}">${y.rank === 1 ? '★' : (y.rank || '·')}</span>`).join('');
 
-  el.innerHTML = d.managers.map((m, i) => {
-    const rank = i + 1;
-    const draftPct = Math.round(m.draft_quality * 100);
-    const mgmtPct = Math.round(m.management_quality * 100);
-    const scouting = m.scouting
-      ? `<div class="manager-card-scouting">${escHtml(m.scouting)}</div>`
-      : '';
-
+  const card = m => {
+    const [w, l, t] = m.career_wlt;
+    const titles = m.titles ? '★'.repeat(m.titles) : '';
     return `<div class="manager-card">
       <div class="manager-card-header">
-        <div class="manager-card-rank">#${rank}</div>
-        <div class="manager-card-name">${m.manager}</div>
-        <div class="manager-card-meta">${m.seasons} Seasons · Avg Rank #${m.avg_rank} · Elo ${elo[m.manager] || '?'}</div>
+        <div class="manager-card-name">${escHtml(m.name)} <span style="color:var(--amber)">${titles}</span></div>
+        <div class="manager-card-meta">${m.first}–${m.last} · ${m.seasons} seasons · ${w}-${l}-${t} lifetime</div>
       </div>
       <div class="manager-card-body">
-        <div class="manager-card-stats">
-          <div class="mc-stat"><div class="mc-stat-val">.${(m.draft_quality * 1000).toFixed(0).padStart(3, '0')}</div><div class="mc-stat-label">Draft</div></div>
-          <div class="mc-stat"><div class="mc-stat-val">.${(m.management_quality * 1000).toFixed(0).padStart(3, '0')}</div><div class="mc-stat-label">Mgmt</div></div>
-          <div class="mc-stat"><div class="mc-stat-val">.${(m.composite * 1000).toFixed(0).padStart(3, '0')}</div><div class="mc-stat-label">Composite</div></div>
-        </div>
-        <div class="quality-bar-label">Draft Quality</div>
-        <div class="quality-bar"><div class="quality-bar-fill draft" style="width:${draftPct}%"></div></div>
-        <div class="quality-bar-label">Management</div>
-        <div class="quality-bar"><div class="quality-bar-fill mgmt" style="width:${mgmtPct}%"></div></div>
-        ${scouting}
+        <div style="margin-bottom:var(--space-sm);font-size:var(--text-xs);color:var(--ink-muted);
+          font-family:var(--font-stat);letter-spacing:0.05em">FINISHES ${m.first}→${m.last} (★ = title)</div>
+        <div style="line-height:1.9">${finishLine(m)}</div>
       </div>
     </div>`;
+  };
+
+  // rivalry grid among current managers
+  const names = riv.current.map(m => m.name);
+  const short = n => n.split(' ')[0];
+  const rec = (a, b) => {
+    const k1 = a + '|' + b, k2 = b + '|' + a;
+    if (riv.grid[k1]) return riv.grid[k1];
+    if (riv.grid[k2]) { const [w, l, t] = riv.grid[k2]; return [l, w, t]; }
+    return null;
+  };
+  let grid = `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:11px;font-family:var(--font-mono)">
+    <tr><th style="padding:4px 6px"></th>${names.map(n => `<th style="padding:4px 6px;color:var(--ink-muted)">${escHtml(short(n))}</th>`).join('')}</tr>`;
+  for (const a of names) {
+    grid += `<tr><th style="padding:4px 6px;text-align:right;color:var(--ink-muted)">${escHtml(short(a))}</th>`;
+    for (const b of names) {
+      if (a === b) { grid += '<td style="padding:4px 6px;background:var(--parchment-deep)"></td>'; continue; }
+      const r = rec(a, b);
+      if (!r || (r[0] + r[1] + r[2]) === 0) { grid += '<td style="padding:4px 6px;text-align:center;color:var(--ink-muted)">—</td>'; continue; }
+      const lead = r[0] > r[1] ? 'var(--grass, #2e7d32)' : r[0] < r[1] ? 'var(--clay, #b3562e)' : 'var(--ink-muted)';
+      grid += `<td style="padding:4px 6px;text-align:center;color:${lead}" title="${escHtml(a)} vs ${escHtml(b)}: ${r[0]}-${r[1]}-${r[2]}">${r[0]}-${r[1]}${r[2] ? '-' + r[2] : ''}</td>`;
+    }
+    grid += '</tr>';
+  }
+  grid += '</table></div>';
+
+  const alumni = riv.alumni.map(m => {
+    const [w, l, t] = m.career_wlt;
+    return `<div style="padding:var(--space-sm) var(--space-md);border-left:3px solid var(--parchment-deep)">
+      <strong>${escHtml(m.name)}</strong> ${m.titles ? '<span style="color:var(--amber)">' + '★'.repeat(m.titles) + '</span>' : ''}
+      <span style="color:var(--ink-muted);font-size:var(--text-sm)"> · ${m.first}–${m.last} · ${m.seasons} seasons${(w+l+t) ? ' · ' + w + '-' + l + '-' + t : ''}</span>
+    </div>`;
   }).join('');
+
+  el.innerHTML = riv.current.map(card).join('') +
+    `<div style="grid-column:1/-1;margin-top:var(--space-xl)">
+       <h3 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:var(--space-xs)">The Rivalry Grid</h3>
+       <p style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:var(--space-md)">
+         Lifetime head-to-head, row vs column — every meeting since 2004, playoffs included,
+         post-census identities. Green = row leads.</p>
+       ${grid}
+     </div>
+     <div style="grid-column:1/-1;margin-top:var(--space-xl)">
+       <h3 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:var(--space-md)">Alumni</h3>
+       ${alumni}
+     </div>`;
 }
 
 
@@ -609,6 +644,7 @@ function renderNewsletter(d) {
   const listEl = document.getElementById('newsletter-list');
   const bodyEl = document.getElementById('newsletter-content');
   if (!listEl || !d.newsletters || !d.newsletters.length) return;
+  if (!d.newsletters[0].content) return;  // index only — lazy loader will re-render
 
   listEl.innerHTML = d.newsletters.map((n, i) => {
     const label = n.label.replace('week', 'Week ').replace('preseason', 'Preseason')
@@ -730,32 +766,97 @@ function renderHistory(d) {
 }
 
 
+
+
+/* ── RECORDS & CHAMPIONS ─────────────────────────────────*/
+
+const RECORD_LABELS = {
+  best_week: 'Best single week', worst_week: 'Worst single week',
+  most_wins: 'Most category wins, season', fewest_wins: 'Fewest category wins, season',
+  best_career_pct: 'Best career pct', most_transactions: 'Most moves, season',
+  biggest_blowout: 'Biggest blowout', most_titles: 'Most titles',
+  longest_drought: 'Longest title drought',
+};
+
+function renderRecords(d) {
+  const champs = document.getElementById('records-champions');
+  if (!champs) return;
+  const hist = (d.history || []).filter(h => h.champion);
+  champs.innerHTML = `<div class="scoreboard"><div class="scoreboard-title">Champions, ${hist[hist.length-1].year}–${hist[0].year}</div>` +
+    hist.map(h => {
+      const rec = (h.champion_record && h.champion_record !== '0-0-0') ? h.champion_record : '';
+      return `<div class="scoreboard-row" style="display:grid;grid-template-columns:60px 1fr 1fr 110px;padding:4px 12px">
+      <span style="font-family:var(--font-mono)">${h.year}</span>
+      <span><strong>${escHtml(h.champion)}</strong></span>
+      <span style="color:var(--board-dim)">${escHtml(h.champion_team || '')}</span>
+      <span style="text-align:right;font-family:var(--font-mono);white-space:nowrap">${escHtml(rec)}</span>
+    </div>`; }).join('') + '</div>';
+
+  const rec = document.getElementById('records-alltime');
+  const R = d.records || {};
+  rec.innerHTML = '<h3 style="font-family:var(--font-display);margin-bottom:var(--space-md)">All-Time Records</h3>' +
+    Object.entries(RECORD_LABELS).filter(([k]) => R[k]).map(([k, label]) => {
+      const r = R[k];
+      const holder = r.manager || r.holder || '?';
+      const detail = r.detail || [r.score, r.wins, r.pct, r.moves, r.value].find(v => v !== undefined) || '';
+      const when = r.year ? ` (${r.year}${r.week ? ' wk' + r.week : ''})` : '';
+      return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--parchment-deep)">
+        <span style="color:var(--ink-muted)">${label}</span>
+        <span><strong>${escHtml(String(holder))}</strong> ${escHtml(String(detail))}${when}</span></div>`;
+    }).join('');
+
+  const titles = document.getElementById('records-titles');
+  const counts = {};
+  hist.forEach(h => counts[h.champion] = (counts[h.champion] || 0) + 1);
+  titles.innerHTML = '<h3 style="font-family:var(--font-display);margin-bottom:var(--space-md)">Title Count</h3>' +
+    Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([m, c]) =>
+      `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--parchment-deep)">
+        <span>${escHtml(m)}</span><span style="color:var(--amber)">${'★'.repeat(c)}</span></div>`).join('');
+}
+
 /* ── ROUTER ───────────────────────────────────────────────*/
 
 let observer;
 
 function initRouter() {
-  const navLinks = document.querySelectorAll('.masthead-nav a[data-page]');
+  const SECTIONS = {
+    season:  [["home", "Standings"], ["matchups", "This Week"], ["odds", "Playoff Odds"], ["wire", "The Wire"]],
+    archive: [["newsletter", "Newsletters"], ["replay", "Season Replay"], ["draft", "Draft Room"], ["records", "Records & Champions"], ["history", "History"]],
+    managers: [["managers", "Careers & Rivalries"]],
+  };
+  const sectionOf = {};
+  for (const [sec, pages] of Object.entries(SECTIONS))
+    for (const [pg] of pages) sectionOf[pg] = sec;
+
+  const secLinks = document.querySelectorAll('#section-nav a[data-section]');
+  const subnav = document.getElementById('subnav');
 
   function navigate(page) {
+    if (!sectionOf[page]) page = 'home';
+    const sec = sectionOf[page];
     document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
     const target = document.getElementById('page-' + page);
     if (target) target.style.display = 'block';
 
-    navLinks.forEach(a => a.classList.remove('active'));
-    const link = document.querySelector(`.masthead-nav a[data-page="${page}"]`);
-    if (link) link.classList.add('active');
+    secLinks.forEach(a => a.classList.toggle('active', a.dataset.section === sec));
+    subnav.innerHTML = SECTIONS[sec].map(([pg, label]) =>
+      `<a data-page="${pg}" style="cursor:pointer;font-family:var(--font-stat);font-size:var(--text-sm);
+         letter-spacing:0.06em;color:${pg === page ? 'var(--board-bright,#E8F0D8)' : 'var(--board-dim,#6B8B73)'};
+         ${pg === page ? 'border-bottom:2px solid var(--amber);' : ''}padding-bottom:2px">${label}</a>`).join('');
+    subnav.querySelectorAll('a[data-page]').forEach(a => a.addEventListener('click', () => {
+      window.location.hash = a.dataset.page; navigate(a.dataset.page);
+    }));
 
+    if (page === 'newsletter') ensureNewsletters();
     window.scrollTo({ top: 0, behavior: 'instant' });
     setTimeout(triggerVisible, 50);
   }
 
-  navLinks.forEach(a => a.addEventListener('click', e => {
+  secLinks.forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
-    const page = a.dataset.page;
-    window.location.hash = page;
-    navigate(page);
-    // Close mobile menu on nav click
+    const first = SECTIONS[a.dataset.section][0][0];
+    window.location.hash = first;
+    navigate(first);
     const nav = document.querySelector('.masthead-nav');
     const burger = document.getElementById('hamburger');
     if (nav) nav.classList.remove('open');
@@ -764,6 +865,21 @@ function initRouter() {
 
   window.addEventListener('hashchange', () => navigate(window.location.hash.slice(1) || 'home'));
   navigate(window.location.hash.slice(1) || 'home');
+}
+
+/* newsletters.js is lazy-loaded the first time the archive opens */
+let _nlLoaded = false;
+function ensureNewsletters() {
+  if (_nlLoaded) return;
+  _nlLoaded = true;
+  const sc = document.createElement('script');
+  sc.src = 'src/data/newsletters.js';
+  sc.onload = () => {
+    const d = D();
+    if (window.ERNIE_NEWSLETTERS) d.newsletters = window.ERNIE_NEWSLETTERS;
+    renderNewsletter(d);
+  };
+  document.head.appendChild(sc);
 }
 
 

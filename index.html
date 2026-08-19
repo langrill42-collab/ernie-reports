@@ -30,17 +30,10 @@
       <span class="logo">Ernie Reports</span>
       <span class="byline">Est. 2004</span>
     </div>
-    <div class="masthead-nav">
-      <a data-page="home">Home</a>
-      <a data-page="managers">Managers</a>
-      <a data-page="matchups">Matchups</a>
-      <a data-page="draft">Draft Room</a>
-      <a data-page="replay">Season Replay</a>
-      <a data-page="power">Power Rankings</a>
-      <a data-page="wire">The Wire</a>
-      <a data-page="newsletter">Newsletter</a>
-      <a data-page="odds">Playoff Odds</a>
-      <a data-page="history">History</a>
+    <div class="masthead-nav" id="section-nav">
+      <a data-section="season" class="nav-section">This Season</a>
+      <a data-section="archive" class="nav-section">The Archive</a>
+      <a data-section="managers" class="nav-section">Managers</a>
     </div>
     <div class="league-toggle">
       <span class="league-pill active" data-league="lpt">LPT</span>
@@ -51,6 +44,7 @@
     </button>
   </div>
 </nav>
+<div class="subnav" id="subnav" style="background:var(--board-dark,#2A3D32);padding:6px 24px;display:flex;gap:18px;flex-wrap:wrap"></div>
 
 
 <!-- ════════════════════════════════════════════════════════
@@ -115,7 +109,7 @@
   <section class="section animate-in">
     <div class="section-header">
       <h2 class="section-title">Elo Power Rankings</h2>
-      <span class="section-subtitle">All-Time &middot; Since 2009</span>
+      <span class="section-subtitle">Modern Era &middot; 2022<span class="section-subtitle">All-Time &middot; Since 2009</span>ndash;Present &middot; K=20</span>
     </div>
     <div class="elo-timeline stagger" id="elo-body"></div>
   </section>
@@ -128,10 +122,11 @@
      PAGE: MANAGERS
      ════════════════════════════════════════════════════════ -->
 <div id="page-managers" style="display:none">
+  <!-- rebuilt 2026-08: careers + rivalry grid, no composite grading -->
   <section class="section">
     <div class="section-header">
       <h2 class="section-title">Manager Profiles</h2>
-      <span class="section-subtitle">Scouting Reports</span>
+      <span class="section-subtitle">Careers &amp; Rivalries &middot; Est. 2004</span>
     </div>
     <div class="manager-grid stagger" id="managers-grid"></div>
   </section>
@@ -281,6 +276,20 @@
     </p>
     <iframe src="playoff-odds.html" title="Interactive playoff odds chart"
       style="width:100%;height:720px;border:1px solid var(--parchment-deep);border-radius:8px;background:#fcfcfb"></iframe>
+  </section>
+</div>
+
+<div id="page-records" style="display:none">
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Records &amp; Champions</h2>
+      <span class="section-subtitle">The Permanent Ledger</span>
+    </div>
+    <div id="records-champions"></div>
+    <div class="two-col" style="margin-top:var(--space-xl)">
+      <div id="records-alltime"></div>
+      <div id="records-titles"></div>
+    </div>
   </section>
 </div>
 
