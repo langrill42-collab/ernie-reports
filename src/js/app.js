@@ -873,7 +873,7 @@ function ensureNewsletters() {
   if (_nlLoaded) return;
   _nlLoaded = true;
   const sc = document.createElement('script');
-  sc.src = 'src/data/newsletters.js';
+  sc.src = 'src/data/newsletters.js?v=' + encodeURIComponent(D().exported_at || '');
   sc.onload = () => {
     const d = D();
     if (window.ERNIE_NEWSLETTERS) d.newsletters = window.ERNIE_NEWSLETTERS;
