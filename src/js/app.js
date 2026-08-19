@@ -33,6 +33,7 @@ function renderAll() {
   renderDraft(d);
   renderSeasonReplay(d);
   renderRecords(d);
+  renderKeepers();
   renderWire(d);
   renderNewsletter(d);
   renderHistory(d);
@@ -830,6 +831,55 @@ function renderRecords(d) {
         <span>${escHtml(m)}</span><span style="color:var(--amber)">${'★'.repeat(c)}</span></div>`).join('');
 }
 
+/* ── KEEPERS ─────────────────────────────────────────────*/
+
+function renderKeepers() {
+  const body = document.getElementById('keepers-body');
+  const K = window.ERNIE_KEEPERS;
+  if (!body || !K || ACTIVE_LEAGUE !== 'lpt') { if (body) body.innerHTML = ''; return; }
+  setIf('keepers-subtitle', `2027 Outlook · as of ${K.generated}`);
+
+  const managers = [...new Set(K.rows.map(r => r.manager))];
+  const filterEl = document.getElementById('keepers-filter');
+  let active = window.__keeperFilter || 'All';
+
+  const chip = (label) =>
+    `<button class="chip-k" data-m="${escHtml(label)}" style="border:1px solid var(--parchment-deep);
+       background:${label === active ? 'var(--board)' : 'var(--parchment)'};
+       color:${label === active ? 'var(--board-text)' : 'var(--ink-muted)'};
+       padding:4px 12px;border-radius:14px;cursor:pointer;font-family:var(--font-stat);
+       font-size:var(--text-xs);letter-spacing:0.04em">${escHtml(label)}</button>`;
+  filterEl.innerHTML = ['All', ...managers].map(chip).join('');
+  filterEl.querySelectorAll('.chip-k').forEach(b => b.onclick = () => {
+    window.__keeperFilter = b.dataset.m; renderKeepers();
+  });
+
+  const rows = K.rows.filter(r => active === 'All' || r.manager === active);
+  const statusColor = st =>
+    /MAXED OUT/.test(st) ? 'var(--clay)' :
+    /final year/.test(st) ? 'var(--amber-dim, #b8860b)' : 'var(--ink-muted)';
+
+  let html = '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:var(--text-sm)">';
+  html += `<tr>${['Manager','Player','MLB','Price','Status','Keepable through']
+    .map((h,i) => `<th style="text-align:${i===3?'right':'left'};padding:6px 10px;border-bottom:2px solid var(--parchment-deep);font-family:var(--font-stat);font-size:var(--text-xs);letter-spacing:0.05em;color:var(--ink-muted)">${h}</th>`).join('')}</tr>`;
+  let lastMgr = null;
+  for (const r of rows) {
+    const mgrCell = r.manager === lastMgr && active === 'All' ? '' : escHtml(r.manager);
+    lastMgr = r.manager;
+    html += `<tr>
+      <td style="padding:4px 10px;border-bottom:1px solid var(--parchment-deep);font-weight:600">${mgrCell}</td>
+      <td style="padding:4px 10px;border-bottom:1px solid var(--parchment-deep)">${escHtml(r.player)}</td>
+      <td style="padding:4px 10px;border-bottom:1px solid var(--parchment-deep);color:var(--ink-muted)">${escHtml(r.mlb || '')}</td>
+      <td style="padding:4px 10px;border-bottom:1px solid var(--parchment-deep);text-align:right;font-variant-numeric:tabular-nums">${r.price != null ? '$' + r.price : ''}</td>
+      <td style="padding:4px 10px;border-bottom:1px solid var(--parchment-deep);color:${statusColor(r.status)}">${escHtml(r.status)}</td>
+      <td style="padding:4px 10px;border-bottom:1px solid var(--parchment-deep);font-variant-numeric:tabular-nums">${r.last_year || '—'}</td>
+    </tr>`;
+  }
+  html += '</table></div>';
+  body.innerHTML = html;
+}
+
+
 /* ── ROUTER ───────────────────────────────────────────────*/
 
 let observer;
@@ -837,7 +887,7 @@ let observer;
 function initRouter() {
   const getSections = () => ({
     season:  ACTIVE_LEAGUE === 'lpt'
-      ? [["home", "Standings"], ["matchups", "This Week"], ["odds", "Playoff Odds"], ["wire", "The Wire"]]
+      ? [["home", "Standings"], ["matchups", "This Week"], ["keepers", "Keepers"], ["odds", "Playoff Odds"], ["wire", "The Wire"]]
       : [["home", "Standings"], ["matchups", "This Week"], ["wire", "The Wire"]],
     archive: [["newsletter", "Newsletters"], ["replay", "Season Replay"], ["draft", "Draft Room"], ["records", "Records & Champions"], ["history", "History"]],
     managers: [["managers", "Careers & Rivalries"]],
