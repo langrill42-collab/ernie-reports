@@ -48,6 +48,19 @@ function renderHero(d) {
   if (eyebrow && m.week) {
     eyebrow.textContent = `${s.last_year} Season — Week ${m.week} Complete`;
   }
+  const title = document.querySelector('.hero-title');
+  const sub = document.querySelector('.hero-subtitle');
+  if (title) {
+    if (ACTIVE_LEAGUE === 'lpt') {
+      title.innerHTML = "Let's Play <em>Two!</em>";
+      if (sub) sub.textContent = "Twenty-three seasons. Twelve managers. One league that refuses to die. Ernie remembers everything—the dynasties, the heartbreak, and that one trade in 2017 everyone is still mad about.";
+    } else {
+      title.innerHTML = escHtml(s.name || 'Statesman League');
+      if (sub) sub.textContent = `${s.seasons} seasons, ${s.first_year}–${s.last_year}. NL-only, auction-drafted, lineup-locked on Mondays. Ernie keeps this book too.`;
+    }
+  }
+  const sbTitle = document.querySelector('.scoreboard-title');
+  if (sbTitle) sbTitle.textContent = `${s.name || ''} — Head-to-Head Categories`;
 
   setIf('hero-stat-seasons', s.seasons);
   setIf('hero-stat-teams', s.teams.toLocaleString());
