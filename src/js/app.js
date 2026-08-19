@@ -5,7 +5,10 @@
    all pages. Hash-based routing, scroll animations.
    ═══════════════════════════════════════════════════════════ */
 
-const D = () => window.ERNIE_DATA || {};
+let ACTIVE_LEAGUE = 'lpt';
+const D = () => (ACTIVE_LEAGUE === 'lpt'
+  ? window.ERNIE_DATA
+  : window['ERNIE_DATA_' + ACTIVE_LEAGUE.toUpperCase()]) || {};
 
 document.addEventListener('DOMContentLoaded', () => {
   renderAll();
@@ -819,14 +822,17 @@ function renderRecords(d) {
 let observer;
 
 function initRouter() {
-  const SECTIONS = {
-    season:  [["home", "Standings"], ["matchups", "This Week"], ["odds", "Playoff Odds"], ["wire", "The Wire"]],
+  const getSections = () => ({
+    season:  ACTIVE_LEAGUE === 'lpt'
+      ? [["home", "Standings"], ["matchups", "This Week"], ["odds", "Playoff Odds"], ["wire", "The Wire"]]
+      : [["home", "Standings"], ["matchups", "This Week"], ["wire", "The Wire"]],
     archive: [["newsletter", "Newsletters"], ["replay", "Season Replay"], ["draft", "Draft Room"], ["records", "Records & Champions"], ["history", "History"]],
     managers: [["managers", "Careers & Rivalries"]],
-  };
+  });
   const sectionOf = {};
-  for (const [sec, pages] of Object.entries(SECTIONS))
+  for (const [sec, pages] of Object.entries(getSections()))
     for (const [pg] of pages) sectionOf[pg] = sec;
+  sectionOf["odds"] = "season";
 
   const secLinks = document.querySelectorAll('#section-nav a[data-section]');
   const subnav = document.getElementById('subnav');
@@ -839,7 +845,7 @@ function initRouter() {
     if (target) target.style.display = 'block';
 
     secLinks.forEach(a => a.classList.toggle('active', a.dataset.section === sec));
-    subnav.innerHTML = SECTIONS[sec].map(([pg, label]) =>
+    subnav.innerHTML = getSections()[sec].map(([pg, label]) =>
       `<a data-page="${pg}" style="cursor:pointer;font-family:var(--font-stat);font-size:var(--text-sm);
          letter-spacing:0.06em;color:${pg === page ? 'var(--board-bright,#E8F0D8)' : 'var(--board-dim,#6B8B73)'};
          ${pg === page ? 'border-bottom:2px solid var(--amber);' : ''}padding-bottom:2px">${label}</a>`).join('');
@@ -854,7 +860,7 @@ function initRouter() {
 
   secLinks.forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
-    const first = SECTIONS[a.dataset.section][0][0];
+    const first = getSections()[a.dataset.section][0][0];
     window.location.hash = first;
     navigate(first);
     const nav = document.querySelector('.masthead-nav');
@@ -872,11 +878,14 @@ let _nlLoaded = false;
 function ensureNewsletters() {
   if (_nlLoaded) return;
   _nlLoaded = true;
+  const league = ACTIVE_LEAGUE;
+  const file = league === 'lpt' ? 'newsletters.js' : 'newsletters-' + league + '.js';
   const sc = document.createElement('script');
-  sc.src = 'src/data/newsletters.js?v=' + encodeURIComponent(D().exported_at || '');
+  sc.src = 'src/data/' + file + '?v=' + encodeURIComponent(D().exported_at || '');
   sc.onload = () => {
     const d = D();
-    if (window.ERNIE_NEWSLETTERS) d.newsletters = window.ERNIE_NEWSLETTERS;
+    const payload = window['ERNIE_NEWSLETTERS_' + league.toUpperCase()] || window.ERNIE_NEWSLETTERS;
+    if (payload) d.newsletters = payload;
     renderNewsletter(d);
   };
   document.head.appendChild(sc);
@@ -908,8 +917,26 @@ function triggerVisible() {
 function initLeagueToggle() {
   document.querySelectorAll('.league-pill').forEach(pill => {
     pill.addEventListener('click', () => {
-      document.querySelectorAll('.league-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
+      const league = pill.dataset.league;
+      if (league === ACTIVE_LEAGUE) return;
+      const activate = () => {
+        ACTIVE_LEAGUE = league;
+        document.querySelectorAll('.league-pill').forEach(p =>
+          p.classList.toggle('active', p.dataset.league === league));
+        _nlLoaded = false;   // newsletters are per-league; reload lazily
+        renderAll();
+        // odds chart is LPT-only — hide its subnav entry off-league
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      };
+      if (league !== 'lpt' && !window['ERNIE_DATA_' + league.toUpperCase()]) {
+        const sc = document.createElement('script');
+        sc.src = 'src/data/data-' + league + '.js?v=' + Date.now();
+        sc.onload = activate;
+        sc.onerror = () => alert('No data exported yet for ' + league);
+        document.head.appendChild(sc);
+      } else {
+        activate();
+      }
     });
   });
 }
