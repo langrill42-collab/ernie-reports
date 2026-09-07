@@ -7896,7 +7896,7 @@ window.ERNIE_DATA = {
           {
             "name": "NSVH",
             "winner": "home",
-            "home_val": 7,
+            "home_val": 6,
             "away_val": 2
           }
         ]
