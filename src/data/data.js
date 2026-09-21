@@ -11,7 +11,7 @@ window.ERNIE_DATA = {
     "last_year": 2026,
     "teams": 265,
     "draft_picks": 7376,
-    "transactions": 17674,
+    "transactions": 17689,
     "matchups": 2450,
     "managers": 69
   },
@@ -7415,7 +7415,7 @@ window.ERNIE_DATA = {
       "management_quality": 0.69,
       "composite": 0.584,
       "keeper_quality": 0.303,
-      "avg_adds": 117.5,
+      "avg_adds": 117.8,
       "avg_churn": 5.0,
       "avg_retention": 0.357
     },
@@ -7490,7 +7490,7 @@ window.ERNIE_DATA = {
       "management_quality": 0.674,
       "composite": 0.499,
       "keeper_quality": 0.0,
-      "avg_adds": 72.0,
+      "avg_adds": 73.0,
       "avg_churn": 2.5,
       "avg_retention": 0.0
     },
@@ -7580,7 +7580,7 @@ window.ERNIE_DATA = {
       "management_quality": 0.465,
       "composite": 0.406,
       "keeper_quality": 0.079,
-      "avg_adds": 44.4,
+      "avg_adds": 44.5,
       "avg_churn": 1.7,
       "avg_retention": 0.08
     },
@@ -7595,7 +7595,7 @@ window.ERNIE_DATA = {
       "management_quality": 0.443,
       "composite": 0.385,
       "keeper_quality": 0.047,
-      "avg_adds": 91.2,
+      "avg_adds": 91.4,
       "avg_churn": 3.4,
       "avg_retention": 0.12
     },
@@ -67382,27 +67382,27 @@ window.ERNIE_DATA = {
     "season_counts": [
       {
         "manager": "Drew",
-        "moves": 235
+        "moves": 236
       },
       {
         "manager": "Andrew",
-        "moves": 219
+        "moves": 221
       },
       {
         "manager": "Greg",
-        "moves": 173
+        "moves": 176
       },
       {
         "manager": "Christopher",
-        "moves": 158
+        "moves": 162
       },
       {
         "manager": "Ryan L",
-        "moves": 111
+        "moves": 112
       },
       {
         "manager": "Alex K",
-        "moves": 107
+        "moves": 111
       },
       {
         "manager": "Jimmy",
@@ -67784,22 +67784,22 @@ window.ERNIE_DATA = {
     "career": [
       {
         "manager": "Drew",
-        "moves": 2272,
+        "moves": 2273,
         "seasons": 20
       },
       {
         "manager": "Ryan L",
-        "moves": 1348,
+        "moves": 1349,
         "seasons": 23
       },
       {
         "manager": "Greg",
-        "moves": 1314,
+        "moves": 1317,
         "seasons": 10
       },
       {
         "manager": "Alex K",
-        "moves": 1297,
+        "moves": 1301,
         "seasons": 21
       },
       {
@@ -67814,7 +67814,7 @@ window.ERNIE_DATA = {
       },
       {
         "manager": "Andrew",
-        "moves": 689,
+        "moves": 691,
         "seasons": 4
       },
       {
@@ -67844,7 +67844,7 @@ window.ERNIE_DATA = {
       },
       {
         "manager": "Christopher",
-        "moves": 222,
+        "moves": 226,
         "seasons": 2
       },
       {
