@@ -907,6 +907,61 @@ function rcOrdinal(n) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
+/* Shared hover tooltip for the report-card charts. Marks carry a
+   pipe-separated data-tip (already HTML-escaped); quotes are escaped for the
+   attribute. Hit targets are wider than the marks so small dots stay easy to
+   catch, and the hovered mark takes an ink ring. */
+const rcTipAttr = s => String(s).replace(/"/g, '&quot;');
+
+function rcTipEl() {
+  let t = document.getElementById('rc-tip');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'rc-tip';
+    t.setAttribute('role', 'tooltip');
+    t.style.cssText = 'position:fixed;z-index:60;pointer-events:none;display:none;max-width:280px;' +
+      'background:var(--chalk,#fefcf6);border:1px solid var(--parchment-deep,#ded5c4);border-radius:3px;' +
+      'box-shadow:0 3px 12px rgba(26,22,18,.20);padding:7px 10px;color:var(--ink)';
+    document.body.appendChild(t);
+  }
+  return t;
+}
+
+function rcBindTips(root) {
+  const tip = rcTipEl();
+  const place = e => {
+    const pad = 16, w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX + pad, y = e.clientY + pad;
+    if (x + w > window.innerWidth - 8) x = Math.max(8, e.clientX - w - pad);
+    if (y + h > window.innerHeight - 8) y = Math.max(8, e.clientY - h - pad);
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  };
+  const show = e => {
+    const el = e.currentTarget;
+    const parts = (el.dataset.tip || '').split('|');
+    tip.innerHTML =
+      `<div style="font-family:var(--font-stat);font-size:var(--text-sm);letter-spacing:.02em">${parts[0]}</div>` +
+      parts.slice(1).map(x => `<div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-top:2px">${x}</div>`).join('');
+    tip.style.display = 'block';
+    place(e);
+    const vis = el.querySelector('.rc-vis');
+    if (vis) { vis.style.stroke = 'var(--ink)'; vis.style.strokeWidth = '2.5'; }
+  };
+  const hide = e => {
+    tip.style.display = 'none';
+    const vis = e.currentTarget.querySelector('.rc-vis');
+    if (vis) { vis.style.stroke = ''; vis.style.strokeWidth = ''; }
+  };
+  root.querySelectorAll('[data-tip]').forEach(el => {
+    el.addEventListener('pointerenter', show);
+    el.addEventListener('pointermove', place);
+    el.addEventListener('pointerleave', hide);
+    el.addEventListener('pointercancel', hide);
+  });
+  window.addEventListener('scroll', () => { tip.style.display = 'none'; }, { passive: true });
+}
+
 /* Season Elo, one line per manager, the chosen one in focus. */
 function rcEloChart(name, year) {
   const series = (D().elo || [])
@@ -937,8 +992,14 @@ function rcEloChart(name, year) {
   if (me) {
     svg += `<path d="${path(me.pts)}" fill="none" stroke="${RC_AMBER}" stroke-width="2"
         stroke-linejoin="round" stroke-linecap="round"/>`;
-    svg += me.pts.map(p => `<circle cx="${X(p.week).toFixed(1)}" cy="${Y(p.elo).toFixed(1)}" r="9" fill="transparent">
-        <title>Week ${p.week} · ${Math.round(p.elo)}</title></circle>`).join('');
+    svg += me.pts.map((p, i) => {
+      const prev = i ? me.pts[i - 1].elo : null;
+      const mv = prev === null ? '' : `|${p.elo - prev >= 0 ? '+' : ''}${Math.round(p.elo - prev)} on the week`;
+      return `<g class="rc-mark" data-tip="${rcTipAttr(escHtml(name) + '|Week ' + p.week + ' · Elo ' + Math.round(p.elo) + mv)}">
+        <circle cx="${X(p.week).toFixed(1)}" cy="${Y(p.elo).toFixed(1)}" r="3" class="rc-vis"
+          fill="${RC_AMBER}" stroke="var(--chalk)" stroke-width="0" opacity="0"/>
+        <circle cx="${X(p.week).toFixed(1)}" cy="${Y(p.elo).toFixed(1)}" r="11" fill="transparent"/></g>`;
+    }).join('');
     const last = me.pts[me.pts.length - 1];
     svg += `<circle cx="${X(last.week).toFixed(1)}" cy="${Y(last.elo).toFixed(1)}" r="4"
         fill="${RC_AMBER}" stroke="var(--chalk)" stroke-width="2"/>
@@ -981,12 +1042,20 @@ function rcDraftScatter(m, RC) {
   svg += `<line x1="${X(0).toFixed(1)}" y1="${Y(0).toFixed(1)}" x2="${X(beX).toFixed(1)}" y2="${Y(beX / dpw).toFixed(1)}"
       stroke="var(--ink-muted)" stroke-width="1" stroke-dasharray="5 4" opacity="0.7"/>`;
   const mark = p => {
-    const x = X(p.cost), y = Y(p.war), t =
-      `<title>${escHtml(p.player)} · $${p.cost} · ${p.war.toFixed(1)} WAR${p.kept ? ' · kept' : ''}${p.days ? ' · ' + p.days + ' active days' : ' · never started'}</title>`;
-    return p.kept
-      ? `<path d="M ${x.toFixed(1)},${(y - 6).toFixed(1)} L ${(x + 6).toFixed(1)},${y.toFixed(1)} L ${x.toFixed(1)},${(y + 6).toFixed(1)} L ${(x - 6).toFixed(1)},${y.toFixed(1)} Z"
-             fill="${RC_AMBER}" stroke="var(--chalk)" stroke-width="2">${t}</path>`
-      : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${RC_GREEN}" stroke="var(--chalk)" stroke-width="2">${t}</circle>`;
+    const x = X(p.cost), y = Y(p.war);
+    const over = p.war - p.cost / dpw;
+    const tip = [
+      escHtml(p.player),
+      `$${p.cost} paid · ${p.war.toFixed(1)} WAR`,
+      `${p.kept ? 'kept contract' : 'auction buy'} · ${p.days ? p.days + ' active days' : 'never started'}`,
+      `${over >= 0 ? '+' : ''}${over.toFixed(1)} WAR vs the $${dpw}/win line`,
+    ].join('|');
+    const vis = p.kept
+      ? `<path class="rc-vis" d="M ${x.toFixed(1)},${(y - 6).toFixed(1)} L ${(x + 6).toFixed(1)},${y.toFixed(1)} L ${x.toFixed(1)},${(y + 6).toFixed(1)} L ${(x - 6).toFixed(1)},${y.toFixed(1)} Z"
+             fill="${RC_AMBER}" stroke="var(--chalk)" stroke-width="2"/>`
+      : `<circle class="rc-vis" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${RC_GREEN}" stroke="var(--chalk)" stroke-width="2"/>`;
+    return `<g class="rc-mark" style="cursor:pointer" data-tip="${rcTipAttr(tip)}">${vis}
+        <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="transparent"/></g>`;
   };
   svg += pts.map(mark).join('');
   const resid = p => p.war - p.cost / dpw;
@@ -1167,13 +1236,15 @@ function renderReportCards() {
     sec('Draft Price vs. Return', rcDraftScatter(m, RC),
       `$${m.draft.spend} across ${m.draft.picks} picks returned ${w1(m.draft.war)} WAR` +
       (m.draft.per_win ? ` — $${m.draft.per_win} per win against a league average of $${RC.league.dollars_per_win}` : '') +
-      '. Points above the dashed line beat the going rate.') +
+      '. Points above the dashed line beat the going rate — hover any dot for the player, price and return.') +
     sec('Wire &amp; Trades', `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-lg)">${wire}${trades}</div>`,
       'Value is credited to the stint that earned it: a traded player’s later production counts for his new team.') +
     sec('Keepers', keepers) +
     sec('Every Player', `<details><summary style="cursor:pointer;color:var(--board);font-family:var(--font-stat)">
         Show all ${m.players.length} player-stints</summary><div style="overflow-x:auto;margin-top:var(--space-xs)">${ledger}</div></details>`,
       'Every stint on this roster, best to worst.');
+
+  rcBindTips(body);
 
   body.querySelectorAll('.rc-chip').forEach(b => b.onclick = () => {
     window.__rcManager = b.dataset.m; renderReportCards();
