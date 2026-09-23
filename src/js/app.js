@@ -946,12 +946,12 @@ function rcBindTips(root) {
     tip.style.display = 'block';
     place(e);
     const vis = el.querySelector('.rc-vis');
-    if (vis) { vis.style.stroke = 'var(--ink)'; vis.style.strokeWidth = '2.5'; }
+    if (vis) { vis.style.stroke = 'var(--ink)'; vis.style.strokeWidth = '2.5'; vis.style.opacity = '0.9'; }
   };
   const hide = e => {
     tip.style.display = 'none';
     const vis = e.currentTarget.querySelector('.rc-vis');
-    if (vis) { vis.style.stroke = ''; vis.style.strokeWidth = ''; }
+    if (vis) { vis.style.stroke = ''; vis.style.strokeWidth = ''; vis.style.opacity = ''; }
   };
   root.querySelectorAll('[data-tip]').forEach(el => {
     el.addEventListener('pointerenter', show);
@@ -959,7 +959,10 @@ function rcBindTips(root) {
     el.addEventListener('pointerleave', hide);
     el.addEventListener('pointercancel', hide);
   });
-  window.addEventListener('scroll', () => { tip.style.display = 'none'; }, { passive: true });
+  if (!window.__rcScrollBound) {
+    window.__rcScrollBound = true;
+    window.addEventListener('scroll', () => { tip.style.display = 'none'; }, { passive: true });
+  }
 }
 
 /* Season Elo, one line per manager, the chosen one in focus. */
@@ -987,8 +990,12 @@ function rcEloChart(name, year) {
       <text x="${P.l - 8}" y="${(Y(v) + 3).toFixed(1)}" text-anchor="end" fill="var(--ink-muted)">${v}</text>`).join('');
   svg += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(1500).toFixed(1)}" y2="${Y(1500).toFixed(1)}"
       stroke="var(--ink-muted)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>`;
-  for (const s of series) if (s.name !== name)
-    svg += `<path d="${path(s.pts)}" fill="none" stroke="var(--ink-muted)" stroke-width="1" opacity="0.22"/>`;
+  for (const s of series) if (s.name !== name) {
+    const last = s.pts[s.pts.length - 1];
+    svg += `<g class="rc-mark" data-tip="${rcTipAttr(escHtml(s.name) + '|Elo ' + Math.round(last.elo) + ' after week ' + last.week)}">
+      <path class="rc-vis" d="${path(s.pts)}" fill="none" stroke="var(--ink-muted)" stroke-width="1" opacity="0.22"/>
+      <path d="${path(s.pts)}" fill="none" stroke="transparent" stroke-width="9"/></g>`;
+  }
   if (me) {
     svg += `<path d="${path(me.pts)}" fill="none" stroke="${RC_AMBER}" stroke-width="2"
         stroke-linejoin="round" stroke-linecap="round"/>`;
@@ -1009,7 +1016,7 @@ function rcEloChart(name, year) {
   for (let w = x0; w <= x1; w += Math.ceil((x1 - x0) / 8))
     svg += `<text x="${X(w).toFixed(1)}" y="${H - 10}" text-anchor="middle" fill="var(--ink-muted)">wk ${w}</text>`;
   svg += '</svg>';
-  return `<div style="overflow-x:auto">${svg}</div>
+  return `<div class="rc-chart">${svg}</div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;color:var(--ink-muted);font-size:var(--text-xs);
       font-family:var(--font-mono);margin-top:4px">
       <span><span style="display:inline-block;width:14px;height:2px;background:${RC_AMBER};vertical-align:middle"></span> ${escHtml(name)}</span>
@@ -1081,7 +1088,7 @@ function rcDraftScatter(m, RC) {
       <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);color:var(--ink-muted)">${p.kept ? 'kept' : 'auction'}</td>
       <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);text-align:right;color:var(--ink-muted)">${p.days || 0}</td>
     </tr>`).join('');
-  return `<div style="overflow-x:auto">${svg}</div>
+  return `<div class="rc-chart">${svg}</div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;color:var(--ink-muted);font-size:var(--text-xs);
       font-family:var(--font-mono);margin:4px 0 var(--space-sm)">
       <span><span style="display:inline-block;width:9px;height:9px;background:${RC_AMBER};transform:rotate(45deg);vertical-align:middle"></span> kept contract</span>
@@ -1098,20 +1105,14 @@ function rcDraftScatter(m, RC) {
       </table></details>`;
 }
 
-function rcBar(label, value, rank, teams, scale, fmt) {
+function rcBar(label, value, rank, teams, scale, fmt, rankText) {
   const pos = value >= 0;
   const frac = Math.max(0, Math.min(1, Math.abs(value) / (scale || 1)));
-  const bar = scale === null
-    ? ''
-    : `<div style="flex:1;min-width:90px;height:8px;background:var(--parchment-deep);border-radius:4px;overflow:hidden">
-         <div style="width:${(frac * 100).toFixed(1)}%;height:100%;border-radius:4px;
-           background:${pos ? RC_AMBER : RC_CLAY}"></div></div>`;
-  return `<div style="display:flex;align-items:center;gap:12px;padding:5px 0;border-bottom:1px solid var(--parchment-deep)">
-      <div style="width:132px;font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;color:var(--ink-muted)">${label}</div>
-      <div style="width:76px;text-align:right;font-family:var(--font-stat);font-size:var(--text-md);
-        color:${pos ? 'var(--ink)' : RC_CLAY};font-variant-numeric:tabular-nums">${fmt(value)}</div>
-      ${bar}
-      <div style="width:74px;text-align:right;font-family:var(--font-mono);font-size:10px;color:var(--ink-muted)">${rcOrdinal(rank)} of ${teams}</div>
+  return `<div class="rc-row">
+      <div class="rc-lab">${label}</div>
+      <div class="rc-val" style="color:${pos ? 'var(--ink)' : RC_CLAY}">${fmt(value)}</div>
+      <div class="rc-bar"><div style="width:${(frac * 100).toFixed(1)}%;background:${pos ? RC_AMBER : RC_CLAY}"></div></div>
+      <div class="rc-rank">${rankText || (rcOrdinal(rank) + ' of ' + teams)}</div>
     </div>`;
 }
 
@@ -1140,9 +1141,10 @@ function renderReportCards() {
     rcBar('FROM THE DRAFT', C.draft_war.value, C.draft_war.rank, n, maxOf('draft_war'), w1) +
     rcBar('FROM THE WIRE', C.wire_war.value, C.wire_war.rank, n, maxOf('wire_war'), w1) +
     rcBar('TRADE NET', C.trade_net.value, C.trade_net.rank, n, maxOf('trade_net'), v => (v >= 0 ? '+' : '') + v.toFixed(1)) +
-    rcBar('2027 CONTRACTS', C.keeper_war.value, C.keeper_war.rank, n, maxOf('keeper_war'), w1) +
+    rcBar('BEST ' + m.keepers.cap + ' TO KEEP', C.keeper_war.value, C.keeper_war.rank, n, maxOf('keeper_war'), w1) +
     (C.luck ? rcBar('SCHEDULE LUCK', C.luck.value, C.luck.rank, n, maxOf('luck'),
-      v => (v >= 0 ? '+' : '') + v.toFixed(1) + ' cats') : '');
+      v => (v >= 0 ? '+' : '') + v.toFixed(1) + ' cats',
+      C.luck.rank === 1 ? 'luckiest' : C.luck.rank === n ? 'unluckiest' : rcOrdinal(C.luck.rank) + ' luckiest') : '');
 
   const [cw, cl, ct] = m.cat, [mw, ml, mt] = m.matchup;
   const head = `<div style="display:flex;flex-wrap:wrap;gap:var(--space-lg);align-items:baseline;
@@ -1159,16 +1161,17 @@ function renderReportCards() {
           <span style="font-size:var(--text-xs);color:${(m.elo.delta || 0) >= 0 ? RC_GREEN : RC_CLAY}">${(m.elo.delta || 0) >= 0 ? '+' : ''}${m.elo.delta || 0}</span></div></div>
       </div></div>`;
 
-  const wire = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-md);margin-bottom:4px">The Wire</h4>
+  const wireRow = p => `<div style="display:flex;justify-content:space-between;gap:10px;
+        padding:3px 0;border-bottom:1px solid var(--parchment-deep);font-size:var(--text-sm)">
+        <span>${escHtml(p.player)} <span style="color:var(--ink-muted);font-size:var(--text-xs)">${p.pre ? 'pre-season' : (p.date ? p.date.slice(5) : '')}${p.faab ? ' · $' + p.faab : ''}</span></span>
+        <span style="font-family:var(--font-stat);font-variant-numeric:tabular-nums;color:${p.war < 0 ? RC_CLAY : 'var(--ink)'}">${p.war.toFixed(1)}</span></div>`;
+  const busts = (m.wire.bottom || []).slice().sort((a, b) => a.war - b.war);
+  const wire = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:4px">The Wire</h4>
       <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">
         ${m.wire.adds} pickups · ${w1(m.wire.war)} WAR</div>
-      ${(m.wire.top.length ? m.wire.top : []).map(p => `<div style="display:flex;justify-content:space-between;gap:10px;
-        padding:3px 0;border-bottom:1px solid var(--parchment-deep);font-size:var(--text-sm)">
-        <span>${escHtml(p.player)} <span style="color:var(--ink-muted);font-size:var(--text-xs)">${p.date ? p.date.slice(5) : ''}${p.faab ? ' · $' + p.faab : ''}</span></span>
-        <span style="font-family:var(--font-stat);font-variant-numeric:tabular-nums;color:${p.war < 0 ? RC_CLAY : 'var(--ink)'}">${p.war.toFixed(1)}</span></div>`).join('') ||
-        '<div style="color:var(--ink-muted);font-size:var(--text-sm)">No pickups.</div>'}</div>`;
-
-  const trades = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-md);margin-bottom:4px">Trades</h4>
+      ${m.wire.top.map(wireRow).join('') || '<div style="color:var(--ink-muted);font-size:var(--text-sm)">No pickups.</div>'}
+      ${busts.length ? `<div style="margin-top:8px;font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;color:var(--ink-muted)">DIDN'T WORK OUT</div>${busts.map(wireRow).join('')}` : ''}</div>`;
+  const trades = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:4px">Trades</h4>
       <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">
         ${m.trades.length} deal${m.trades.length === 1 ? '' : 's'} · net ${(m.components.trade_net.value >= 0 ? '+' : '')}${w1(m.components.trade_net.value)} WAR after the deal</div>
       ${m.trades.map(t => `<div style="padding:5px 0;border-bottom:1px solid var(--parchment-deep);font-size:var(--text-sm)">
@@ -1180,18 +1183,21 @@ function renderReportCards() {
       </div>`).join('') || '<div style="color:var(--ink-muted);font-size:var(--text-sm)">No trades.</div>'}</div>`;
 
   const kp = m.keepers;
-  const keeperRows = kp.held.slice(0, 14).map((r, i) => `<tr style="${i < kp.cap ? '' : 'opacity:.55'}">
-      <td style="padding:3px 10px;border-bottom:${i === kp.cap - 1 ? '2px solid var(--board)' : '1px solid var(--parchment-deep)'}">${escHtml(r.player)}
+  const heldSorted = [...kp.held].sort((a, b) => (b.war || 0) - (a.war || 0) || (b.price || 0) - (a.price || 0));
+  const capLine = i => i === kp.cap - 1 ? '2px solid var(--board)' : '1px solid var(--parchment-deep)';
+  const keeperRows = heldSorted.slice(0, 14).map((r, i) => `<tr style="${i < kp.cap ? '' : 'opacity:.55'}">
+      <td style="padding:3px 10px;border-bottom:${capLine(i)}">${escHtml(r.player)}
         <span style="color:var(--ink-muted);font-size:10px">${escHtml(r.mlb || '')}</span></td>
-      <td style="padding:3px 10px;border-bottom:${i === kp.cap - 1 ? '2px solid var(--board)' : '1px solid var(--parchment-deep)'};text-align:right;font-variant-numeric:tabular-nums">${r.price != null ? '$' + r.price : '—'}</td>
-      <td style="padding:3px 10px;border-bottom:${i === kp.cap - 1 ? '2px solid var(--board)' : '1px solid var(--parchment-deep)'};text-align:right;font-variant-numeric:tabular-nums;
+      <td style="padding:3px 10px;border-bottom:${capLine(i)};text-align:right;font-variant-numeric:tabular-nums">${r.price != null ? '$' + r.price : '—'}</td>
+      <td style="padding:3px 10px;border-bottom:${capLine(i)};text-align:right;font-variant-numeric:tabular-nums;
         color:${(r.war || 0) < 0 ? RC_CLAY : 'var(--ink)'}">${r.war != null ? r.war.toFixed(1) : '—'}</td>
-      <td style="padding:3px 10px;border-bottom:${i === kp.cap - 1 ? '2px solid var(--board)' : '1px solid var(--parchment-deep)'};color:var(--ink-muted);font-size:var(--text-xs)">through ${r.last_year}</td>
+      <td style="padding:3px 10px;border-bottom:${capLine(i)};color:var(--ink-muted);font-size:var(--text-xs)">through ${r.last_year}</td>
     </tr>`).join('');
-  const keepers = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-md);margin-bottom:4px">2027 Keeper Outlook</h4>
+  const keepers = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:4px">${RC.year + 1} Keeper Outlook</h4>
       <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">
-        ${kp.held.length} eligible contracts at $${kp.held_cost}; he may keep ${kp.cap} — the rule is seven, from draft rounds one through seven.
-        Priciest first; WAR is what the player returned <em>for this manager</em> in ${RC.year}, so a midseason pickup or trade piece shows only his time here.</div>
+        ${kp.held.length} contracts are eligible for ${RC.year + 1}, $${kp.held_cost} in all; the rules allow ${kp.cap} keepers.
+        Sorted by what each returned <em>for this manager</em> in ${RC.year} — a midseason arrival shows only his time here — with the line marking
+        the ${kp.cap} the ledger counts: $${kp.best_cost} for ${w1(kp.best_war)} WAR.</div>
       <table style="border-collapse:collapse;width:100%;max-width:520px;font-size:var(--text-sm)">
         <tr style="text-align:left;color:var(--ink-muted);font-family:var(--font-mono);font-size:10px">
           <th style="padding:3px 10px">PLAYER</th><th style="padding:3px 10px;text-align:right">PRICE</th>
@@ -1200,18 +1206,18 @@ function renderReportCards() {
       </table>
       ${kp.expiring.length ? `<div style="margin-top:var(--space-xs);color:var(--ink-muted);font-size:var(--text-xs)">
         Expiring: ${kp.expiring.slice(0, 8).map(r => escHtml(r.player) + (r.price != null ? ' $' + r.price : '')).join(' · ')}</div>` : ''}</div>`;
-
   const kindLabel = p => p.kind === 'keep' ? 'kept $' + (p.price != null ? p.price : '?')
     : p.kind === 'draft' ? 'drafted $' + (p.price != null ? p.price : '?')
     : p.kind === 'trade' ? 'trade'
-    : p.kind === 'add' ? 'waiver' + (p.price ? ' $' + p.price : '') : '—';
-  const ledger = `<table style="border-collapse:collapse;width:100%;font-size:var(--text-sm)">
+    : p.kind === 'add' ? (p.pre ? 'pre-season claim' : 'waiver') + (p.price ? ' $' + p.price : '') : '—';
+
+  const th = (label, key, right) => `<th data-key="${key}"${key === 'war' ? ' data-dir="-1"' : ''} style="padding:4px 10px${right ? ';text-align:right' : ''}">${label}</th>`;
+  const ledger = `<table class="rc-sort" style="border-collapse:collapse;width:100%;font-size:var(--text-sm)">
       <tr style="text-align:left;color:var(--ink-muted);font-family:var(--font-mono);font-size:10px">
-        <th style="padding:4px 10px">PLAYER</th><th style="padding:4px 10px;text-align:right">WAR</th>
-        <th style="padding:4px 10px;text-align:right">LEAGUE</th><th style="padding:4px 10px">ACQUIRED</th>
-        <th style="padding:4px 10px;text-align:right">DAYS</th><th style="padding:4px 10px">HELD</th>
-        <th style="padding:4px 10px">CATEGORIES</th></tr>
-      ${m.players.map(p => `<tr>
+        ${th('PLAYER', 'name')}${th('WAR', 'war', 1)}${th('LEAGUE', 'rank', 1)}${th('ACQUIRED', 'kind')}
+        ${th('DAYS', 'days', 1)}${th('HELD', 'from')}<th style="padding:4px 10px">CATEGORIES</th></tr>
+      ${m.players.map(p => `<tr data-war="${p.war}" data-rank="${p.lg_rank}" data-days="${p.days}" data-from="${p.from || ''}"
+          data-name="${rcTipAttr(escHtml(p.player))}" data-kind="${rcTipAttr(kindLabel(p))}">
         <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep)">${escHtml(p.player)}</td>
         <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);text-align:right;font-family:var(--font-stat);
           font-variant-numeric:tabular-nums;color:${p.war < 0 ? RC_CLAY : 'var(--ink)'}">${p.war.toFixed(2)}</td>
@@ -1222,6 +1228,15 @@ function renderReportCards() {
         <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);color:var(--ink-muted);font-size:var(--text-xs)">
           ${p.up.map(u => u[0] + ' +' + u[1].toFixed(1)).join(', ')}${p.down.length ? '<span style="color:' + RC_CLAY + '"> · ' + p.down.map(u => u[0] + ' ' + u[1].toFixed(1)).join(', ') + '</span>' : ''}</td>
       </tr>`).join('')}</table>`;
+
+  // best and worst value picks, named under the scatter
+  const dpw = RC.league.dollars_per_win || 4.5;
+  const picks = (m.draft.detail || []).filter(p => p.cost != null);
+  const resid = p => p.war - p.cost / dpw;
+  const bestPick = picks.length ? picks.reduce((x, y) => resid(y) > resid(x) ? y : x) : null;
+  const worstPick = picks.length ? picks.reduce((x, y) => resid(y) < resid(x) ? y : x) : null;
+  const pickNote = bestPick ? ` Best value: ${escHtml(bestPick.player)}, $${bestPick.cost} for ${bestPick.war.toFixed(1)} WAR.` +
+    ` Furthest below the line: ${escHtml(worstPick.player)}, $${worstPick.cost} for ${worstPick.war.toFixed(1)}.` : '';
 
   const sec = (title, inner, note) => `<div style="margin-top:var(--space-lg)">
       <h3 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:2px">${title}</h3>
@@ -1236,7 +1251,7 @@ function renderReportCards() {
     sec('Draft Price vs. Return', rcDraftScatter(m, RC),
       `$${m.draft.spend} across ${m.draft.picks} picks returned ${w1(m.draft.war)} WAR` +
       (m.draft.per_win ? ` — $${m.draft.per_win} per win against a league average of $${RC.league.dollars_per_win}` : '') +
-      '. Points above the dashed line beat the going rate — hover any dot for the player, price and return.') +
+      '. Points above the dashed line beat the going rate; hover any dot for the player, price and return.' + pickNote) +
     sec('Wire &amp; Trades', `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-lg)">${wire}${trades}</div>`,
       'Value is credited to the stint that earned it: a traded player’s later production counts for his new team.') +
     sec('Keepers', keepers) +
@@ -1245,6 +1260,18 @@ function renderReportCards() {
       'Every stint on this roster, best to worst.');
 
   rcBindTips(body);
+  body.querySelectorAll('table.rc-sort th[data-key]').forEach(h => h.onclick = () => {
+    const table = h.closest('table'), key = h.dataset.key, tbody = table.tBodies[0];
+    const numeric = ['war', 'rank', 'days'].includes(key);
+    // first click: numbers high-to-low, names A-to-Z; a second click flips it
+    const dir = h.dataset.dir ? -parseInt(h.dataset.dir, 10) : (numeric ? -1 : 1);
+    table.querySelectorAll('th').forEach(x => x.removeAttribute('data-dir'));
+    h.dataset.dir = String(dir);
+    const rows = [...tbody.querySelectorAll('tr[data-war]')];
+    rows.sort((x, y) => numeric ? dir * (parseFloat(x.dataset[key]) - parseFloat(y.dataset[key]))
+                                : dir * x.dataset[key].localeCompare(y.dataset[key]));   // -1 = high to low
+    rows.forEach(r => tbody.appendChild(r));
+  });
 
   body.querySelectorAll('.rc-chip').forEach(b => b.onclick = () => {
     window.__rcManager = b.dataset.m; renderReportCards();

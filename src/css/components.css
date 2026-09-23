@@ -749,3 +749,22 @@
   font-weight: 700;
   color: var(--ink);
 }
+
+/* ── Report cards (Managers → Season Report Card) ─────────────── */
+.rc-row{display:flex;align-items:center;gap:12px;padding:5px 0;border-bottom:1px solid var(--parchment-deep)}
+.rc-lab{flex:0 0 132px;font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;color:var(--ink-muted)}
+.rc-val{flex:0 0 76px;text-align:right;font-family:var(--font-stat);font-size:1rem;font-variant-numeric:tabular-nums}
+.rc-bar{flex:1 1 120px;min-width:0;height:8px;background:var(--parchment-deep);border-radius:4px;overflow:hidden}
+.rc-bar > div{height:100%;border-radius:4px}
+.rc-rank{flex:0 0 100px;text-align:right;font-family:var(--font-mono);font-size:10px;color:var(--ink-muted)}
+.rc-chart{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.rc-chart svg{min-width:560px;display:block}
+.rc-sort th{cursor:pointer;user-select:none;white-space:nowrap}
+.rc-sort th[data-dir="-1"]::after{content:" \25BE"}
+.rc-sort th[data-dir="1"]::after{content:" \25B4"}
+@media (max-width:600px){
+  .rc-row{flex-wrap:wrap;row-gap:4px}
+  .rc-lab{flex:1 1 auto}
+  .rc-bar{order:4;flex:1 1 100%}
+  .rc-rank{flex:0 0 auto}
+}
