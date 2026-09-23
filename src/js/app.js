@@ -6,6 +6,8 @@
    ═══════════════════════════════════════════════════════════ */
 
 let ACTIVE_LEAGUE = 'lpt';
+const RC_YEARS = [2026, 2025];   // seasons with a report-card export (newest first)
+const rcSlug = n => String(n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 const D = () => (ACTIVE_LEAGUE === 'lpt'
   ? window.ERNIE_DATA
   : window['ERNIE_DATA_' + ACTIVE_LEAGUE.toUpperCase()]) || {};
@@ -210,6 +212,9 @@ function renderManagers(d) {
         <div style="margin-bottom:var(--space-sm);font-size:var(--text-xs);color:var(--ink-muted);
           font-family:var(--font-stat);letter-spacing:0.05em">FINISHES ${m.first}→${m.last} (★ = title)</div>
         <div style="line-height:1.9">${finishLine(m)}</div>
+        ${ACTIVE_LEAGUE === 'lpt' && m.last >= RC_YEARS[RC_YEARS.length - 1]
+          ? `<div style="margin-top:var(--space-sm);font-size:var(--text-xs);font-family:var(--font-stat);letter-spacing:.04em">
+               <a href="#report-cards/${Math.min(m.last, RC_YEARS[0])}/${rcSlug(m.name)}" style="color:var(--board)">${Math.min(m.last, RC_YEARS[0])} report card →</a></div>` : ''}
       </div>
     </div>`;
   };
@@ -884,21 +889,35 @@ function renderKeepers() {
 /* ── REPORT CARDS ─────────────────────────────────────────*/
 
 const RC_AMBER = '#c4841d';      // kept contracts / focus series
-const RC_GREEN = '#2e7d32';      // auction buys  (pair validated for CVD)
-const RC_CLAY  = '#b85c38';      // negative side of diverging bars
-let _rcLoaded = false;
+const RC_GREEN = '#2e7d32';      // auction buys, category wins (pair validated for CVD)
+const RC_CLAY  = '#b85c38';      // losses, negative bars
+const _rcLoading = {};
 
-function ensureReportCards() {
-  if (_rcLoaded) return;
-  _rcLoaded = true;
+/* Route: #report-cards[/year[/manager-slug]]. Missing year = newest. */
+function rcRoute(rest) {
+  const y = parseInt(rest[0], 10);
+  window.__rcYear = RC_YEARS.includes(y) ? y : RC_YEARS[0];
+  window.__rcSlug = rest[1] || window.__rcSlug || null;
+  ensureReportCards(window.__rcYear);
+}
+
+function ensureReportCards(year) {
+  const have = (window.ERNIE_REPORT_CARDS_BY_YEAR || {})[year];
+  if (have) { renderReportCards(); return; }
+  if (_rcLoading[year]) return;
+  _rcLoading[year] = true;
   const sc = document.createElement('script');
-  sc.src = 'src/data/report_cards_2026.js?v=' + encodeURIComponent(D().exported_at || '');
+  sc.src = `src/data/report_cards_${year}.js?v=` + encodeURIComponent(D().exported_at || '');
   sc.onload = () => renderReportCards();
   sc.onerror = () => {
     const b = document.getElementById('rc-body');
-    if (b) b.innerHTML = '<p style="color:var(--ink-muted)">Report cards are not available yet.</p>';
+    if (b) b.innerHTML = `<p style="color:var(--ink-muted)">No report cards for ${year}.</p>`;
   };
   document.head.appendChild(sc);
+}
+
+function rcGo(year, manager) {
+  window.location.hash = 'report-cards/' + year + (manager ? '/' + rcSlug(manager) : '');
 }
 
 function rcOrdinal(n) {
@@ -1116,16 +1135,106 @@ function rcBar(label, value, rank, teams, scale, fmt, rankText) {
     </div>`;
 }
 
+const rcSigned = v => (v >= 0 ? '+' : '') + v.toFixed(1);
+
+/* League table: every manager on one grid, sortable, click a row to open him. */
+function rcSummaryTable(RC, sel) {
+  const n = RC.managers.length;
+  const kLabel = RC.managers[0].keepers.mode === 'kept' ? 'KEPT INTO ' + RC.managers[0].keepers.into : 'BEST 7 TO KEEP';
+  const cols = [
+    ['manager', 'MANAGER', 0], ['finish', 'FINISH', 1], ['team_war', 'TEAM WAR', 1], ['draft_war', 'DRAFT', 1],
+    ['wire_war', 'WIRE', 1], ['trade_net', 'TRADES', 1], ['keeper_war', kLabel, 1], ['luck', 'LUCK', 1], ['elo', 'ELO Δ', 1],
+  ];
+  const cell = (v, rank, fmt) => `<td>${fmt(v)}<span class="rc-rk">${rank ? rcOrdinal(rank) : ''}</span></td>`;
+  const rows = RC.managers.map(m => {
+    const C = m.components, luck = C.luck ? C.luck.value : 0, eloD = m.elo.delta || 0;
+    return `<tr data-sort data-manager="${rcTipAttr(escHtml(m.manager))}" data-finish="${m.final_place || 99}"
+        data-team_war="${C.team_war.value}" data-draft_war="${C.draft_war.value}" data-wire_war="${C.wire_war.value}"
+        data-trade_net="${C.trade_net.value}" data-keeper_war="${C.keeper_war.value}" data-luck="${luck}" data-elo="${eloD}"
+        class="${m.manager === sel ? 'rc-sel' : ''}" title="Open ${escHtml(m.manager)}'s card">
+      <td style="font-family:var(--font-stat);letter-spacing:.02em">${escHtml(m.manager)}
+        <span class="rc-rk" style="font-family:var(--font-body)">${escHtml(m.team)}</span></td>
+      <td style="color:${m.final_place === 1 ? RC_AMBER : 'var(--ink)'}">${rcOrdinal(m.final_place)}</td>
+      ${cell(C.team_war.value, C.team_war.rank, v => v.toFixed(1))}
+      ${cell(C.draft_war.value, C.draft_war.rank, v => v.toFixed(1))}
+      ${cell(C.wire_war.value, C.wire_war.rank, v => v.toFixed(1))}
+      <td style="color:${C.trade_net.value < 0 ? RC_CLAY : 'var(--ink)'}">${rcSigned(C.trade_net.value)}<span class="rc-rk">${rcOrdinal(C.trade_net.rank)}</span></td>
+      ${cell(C.keeper_war.value, C.keeper_war.rank, v => v.toFixed(1))}
+      <td style="color:${luck < 0 ? RC_CLAY : 'var(--ink)'}">${C.luck ? rcSigned(luck) : '—'}</td>
+      <td style="color:${eloD < 0 ? RC_CLAY : 'var(--ink)'}">${(eloD >= 0 ? '+' : '') + eloD}</td>
+    </tr>`;
+  }).join('');
+  return `<div style="overflow-x:auto"><table class="rc-summary rc-sort">
+    <tr>${cols.map(([k, l, num]) => `<th data-key="${k}" data-num="${num}"${k === 'finish' ? ' data-dir="1"' : ''}>${l}</th>`).join('')}</tr>
+    ${rows}</table></div>
+    <p style="color:var(--ink-muted);font-size:var(--text-xs);margin-top:6px">Category wins above replacement, ${RC.year} regular season plus playoffs. Small numerals are ranks. Click a column to sort, a row to open the card.</p>`;
+}
+
+/* Category profile: the regular-season record in each of the twelve. */
+function rcCategoryProfile(m) {
+  const prof = m.cat_profile || {};
+  const keys = Object.keys(prof);
+  if (!keys.length) return '';
+  const total = m.reg_weeks || Math.max(...keys.map(k => prof[k][0] + prof[k][1] + prof[k][2]));
+  const rows = keys.map(k => {
+    const [w, l, t] = prof[k];
+    const seg = (v, color) => v ? `<span style="flex:${v} ${v} 0;background:${color}" title="${v}"></span>` : '';
+    return `<div class="rc-cat">
+      <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-muted)">${escHtml(k)}</div>
+      <div style="font-family:var(--font-stat);font-variant-numeric:tabular-nums;color:${w > l ? 'var(--ink)' : w < l ? RC_CLAY : 'var(--ink-muted)'}">${w}-${l}${t ? '-' + t : ''}</div>
+      <div class="rc-cat-bar" role="img" aria-label="${escHtml(k)}: ${w} wins, ${l} losses, ${t} ties">
+        ${seg(w, RC_GREEN)}${seg(t, 'var(--parchment-deep)')}${seg(l, RC_CLAY)}</div>
+    </div>`;
+  }).join('');
+  const best = keys.reduce((a, b) => prof[b][0] - prof[b][1] > prof[a][0] - prof[a][1] ? b : a);
+  const worst = keys.reduce((a, b) => prof[b][0] - prof[b][1] < prof[a][0] - prof[a][1] ? b : a);
+  return `<div class="rc-cats">${rows}</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;color:var(--ink-muted);font-size:var(--text-xs);font-family:var(--font-mono);margin-top:6px">
+      <span><span style="display:inline-block;width:10px;height:8px;background:${RC_GREEN};border-radius:2px;vertical-align:middle"></span> won</span>
+      <span><span style="display:inline-block;width:10px;height:8px;background:var(--parchment-deep);border-radius:2px;vertical-align:middle"></span> tied</span>
+      <span><span style="display:inline-block;width:10px;height:8px;background:${RC_CLAY};border-radius:2px;vertical-align:middle"></span> lost</span>
+      <span>· ${total} matchups. Strongest: ${escHtml(best)} ${prof[best][0]}-${prof[best][1]}; weakest: ${escHtml(worst)} ${prof[worst][0]}-${prof[worst][1]}.</span>
+    </div>${m.cat_hidden ? `<p style="color:var(--ink-muted);font-size:var(--text-xs);margin-top:4px">${m.cat_hidden === 1 ? 'One category' : m.cat_hidden + ' categories'} tied at the displayed decimals and ${m.cat_hidden === 1 ? 'was' : 'were'} awarded by Yahoo on hidden ones; ${m.cat_hidden === 1 ? 'it appears' : 'they appear'} here as ${m.cat_hidden === 1 ? 'a tie' : 'ties'}, so the wins sum to ${m.cat[0] - m.cat_hidden} rather than ${m.cat[0]}.</p>` : ''}`;
+}
+
+/* Trades as a ledger: gave, got, net, and the running total. */
+function rcTradesTable(m) {
+  if (!m.trades.length) return '<p style="color:var(--ink-muted);font-size:var(--text-sm)">No trades.</p>';
+  let run = 0;
+  const side = list => list.length ? list.map(p =>
+    `<div>${escHtml(p.player)} <span style="color:${p.war < 0 ? RC_CLAY : 'var(--ink-muted)'};font-family:var(--font-stat)">${p.war.toFixed(1)}</span></div>`).join('') : '—';
+  const sum = list => list.reduce((a, p) => a + p.war, 0);
+  const rows = m.trades.map(t => {
+    run += t.net;
+    return `<tr>
+      <td style="white-space:nowrap;color:var(--ink-muted);font-family:var(--font-mono);font-size:10px">${t.date.slice(5)}<br>${escHtml(t.partner)}</td>
+      <td>${side(t.out)}<div style="border-top:1px solid var(--parchment-deep);margin-top:3px;padding-top:2px;color:var(--ink-muted);font-size:var(--text-xs)">${sum(t.out).toFixed(1)} given</div></td>
+      <td>${side(t.in)}<div style="border-top:1px solid var(--parchment-deep);margin-top:3px;padding-top:2px;color:var(--ink-muted);font-size:var(--text-xs)">${sum(t.in).toFixed(1)} received</div></td>
+      <td class="num" style="color:${t.net < 0 ? RC_CLAY : RC_GREEN}">${rcSigned(t.net)}</td>
+      <td class="num" style="color:${run < 0 ? RC_CLAY : 'var(--ink)'}">${rcSigned(run)}</td>
+    </tr>`;
+  }).join('');
+  return `<div style="overflow-x:auto"><table class="rc-trades">
+    <tr><th>WHEN · WITH</th><th>GAVE</th><th>GOT</th><th style="text-align:right">NET</th><th style="text-align:right">RUNNING</th></tr>${rows}</table></div>
+    <p style="color:var(--ink-muted);font-size:var(--text-xs);margin-top:6px">WAR each player produced <em>after</em> the deal, for the team that received him.</p>`;
+}
+
 function renderReportCards() {
-  const RC = window.ERNIE_REPORT_CARDS;
   const body = document.getElementById('rc-body');
+  const year = RC_YEARS.includes(window.__rcYear) ? window.__rcYear : RC_YEARS[0];
+  const RC = (window.ERNIE_REPORT_CARDS_BY_YEAR || {})[year];
   if (!body || !RC || ACTIVE_LEAGUE !== 'lpt') { if (body) body.innerHTML = ''; return; }
   setIf('rc-subtitle', `${RC.year} Season · ranks, not grades`);
   const all = RC.managers, n = all.length;
-  let sel = window.__rcManager;
-  if (!all.some(m => m.manager === sel)) sel = all[0].manager;
-  const m = all.find(x => x.manager === sel);
+  let m = all.find(x => rcSlug(x.manager) === window.__rcSlug) || all[0];
+  const sel = m.manager;
   const C = m.components;
+  const w1 = v => v.toFixed(1);
+
+  const years = `<div class="rc-years">${RC_YEARS.map(y => `<button class="rc-year" data-y="${y}"
+      style="border:1px solid var(--parchment-deep);border-radius:3px;cursor:pointer;padding:4px 14px;font-family:var(--font-stat);
+      font-size:var(--text-sm);letter-spacing:.06em;background:${y === year ? 'var(--board)' : 'var(--parchment)'};
+      color:${y === year ? 'var(--board-text)' : 'var(--ink-muted)'}">${y}</button>`).join('')}</div>`;
 
   const chips = all.map(x => `<button class="rc-chip" data-m="${escHtml(x.manager)}"
       style="border:1px solid var(--parchment-deep);border-radius:14px;cursor:pointer;padding:4px 12px;
@@ -1135,30 +1244,29 @@ function renderReportCards() {
       ${escHtml(x.manager)} <span style="opacity:.7">${rcOrdinal(x.final_place)}</span></button>`).join('');
 
   const maxOf = k => Math.max(...all.map(x => Math.abs(x.components[k] ? x.components[k].value : 0)), 1);
-  const w1 = v => v.toFixed(1);
+  const keeperLabel = m.keepers.mode === 'kept' ? 'KEPT INTO ' + m.keepers.into : 'BEST ' + m.keepers.cap + ' TO KEEP';
   const bars =
     rcBar('TEAM WAR', C.team_war.value, C.team_war.rank, n, maxOf('team_war'), w1) +
     rcBar('FROM THE DRAFT', C.draft_war.value, C.draft_war.rank, n, maxOf('draft_war'), w1) +
     rcBar('FROM THE WIRE', C.wire_war.value, C.wire_war.rank, n, maxOf('wire_war'), w1) +
-    rcBar('TRADE NET', C.trade_net.value, C.trade_net.rank, n, maxOf('trade_net'), v => (v >= 0 ? '+' : '') + v.toFixed(1)) +
-    rcBar('BEST ' + m.keepers.cap + ' TO KEEP', C.keeper_war.value, C.keeper_war.rank, n, maxOf('keeper_war'), w1) +
-    (C.luck ? rcBar('SCHEDULE LUCK', C.luck.value, C.luck.rank, n, maxOf('luck'),
-      v => (v >= 0 ? '+' : '') + v.toFixed(1) + ' cats',
+    rcBar('TRADE NET', C.trade_net.value, C.trade_net.rank, n, maxOf('trade_net'), rcSigned) +
+    rcBar(keeperLabel, C.keeper_war.value, C.keeper_war.rank, n, maxOf('keeper_war'), w1) +
+    (C.luck ? rcBar('SCHEDULE LUCK', C.luck.value, C.luck.rank, n, maxOf('luck'), v => rcSigned(v) + ' cats',
       C.luck.rank === 1 ? 'luckiest' : C.luck.rank === n ? 'unluckiest' : rcOrdinal(C.luck.rank) + ' luckiest') : '');
 
   const [cw, cl, ct] = m.cat, [mw, ml, mt] = m.matchup;
+  const stat = (lab, val, color) => `<div>${lab}<div style="font-family:var(--font-stat);font-size:var(--text-lg);color:${color || 'var(--ink)'}">${val}</div></div>`;
   const head = `<div style="display:flex;flex-wrap:wrap;gap:var(--space-lg);align-items:baseline;
       padding-bottom:var(--space-sm);border-bottom:2px solid var(--board)">
       <div><div style="font-family:var(--font-display);font-size:var(--text-xl)">${escHtml(m.manager)}</div>
         <div style="color:var(--ink-muted);font-size:var(--text-sm)">${escHtml(m.team)}</div></div>
       <div style="display:flex;gap:var(--space-lg);flex-wrap:wrap;font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-muted)">
-        <div>FINISH<div style="font-family:var(--font-stat);font-size:var(--text-lg);color:${m.final_place === 1 ? RC_AMBER : 'var(--ink)'}">${rcOrdinal(m.final_place)}</div></div>
-        <div>SEED<div style="font-family:var(--font-stat);font-size:var(--text-lg);color:var(--ink)">${rcOrdinal(m.seed)}</div></div>
-        <div>CATEGORIES<div style="font-family:var(--font-stat);font-size:var(--text-lg);color:var(--ink)">${cw}-${cl}-${ct}</div></div>
-        <div>PCT<div style="font-family:var(--font-stat);font-size:var(--text-lg);color:var(--ink)">${m.pct.toFixed(3).replace(/^0/, '')}</div></div>
-        <div>MATCHUPS<div style="font-family:var(--font-stat);font-size:var(--text-lg);color:var(--ink)">${mw}-${ml}-${mt}</div></div>
-        <div>ELO<div style="font-family:var(--font-stat);font-size:var(--text-lg);color:var(--ink)">${m.elo.now || '—'}
-          <span style="font-size:var(--text-xs);color:${(m.elo.delta || 0) >= 0 ? RC_GREEN : RC_CLAY}">${(m.elo.delta || 0) >= 0 ? '+' : ''}${m.elo.delta || 0}</span></div></div>
+        ${stat('FINISH', rcOrdinal(m.final_place), m.final_place === 1 ? RC_AMBER : null)}
+        ${stat('SEED', rcOrdinal(m.seed))}
+        ${stat('CATEGORIES', `${cw}-${cl}-${ct}`)}
+        ${stat('PCT', m.pct.toFixed(3).replace(/^0/, ''))}
+        ${stat('MATCHUPS', `${mw}-${ml}-${mt}`)}
+        ${stat('ELO', `${m.elo.now || '—'} <span style="font-size:var(--text-xs);color:${(m.elo.delta || 0) >= 0 ? RC_GREEN : RC_CLAY}">${(m.elo.delta || 0) >= 0 ? '+' : ''}${m.elo.delta || 0}</span>`)}
       </div></div>`;
 
   const wireRow = p => `<div style="display:flex;justify-content:space-between;gap:10px;
@@ -1167,60 +1275,51 @@ function renderReportCards() {
         <span style="font-family:var(--font-stat);font-variant-numeric:tabular-nums;color:${p.war < 0 ? RC_CLAY : 'var(--ink)'}">${p.war.toFixed(1)}</span></div>`;
   const busts = (m.wire.bottom || []).slice().sort((a, b) => a.war - b.war);
   const wire = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:4px">The Wire</h4>
-      <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">
-        ${m.wire.adds} pickups · ${w1(m.wire.war)} WAR</div>
+      <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">${m.wire.adds} pickups · ${w1(m.wire.war)} WAR</div>
       ${m.wire.top.map(wireRow).join('') || '<div style="color:var(--ink-muted);font-size:var(--text-sm)">No pickups.</div>'}
       ${busts.length ? `<div style="margin-top:8px;font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;color:var(--ink-muted)">DIDN'T WORK OUT</div>${busts.map(wireRow).join('')}` : ''}</div>`;
   const trades = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:4px">Trades</h4>
-      <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">
-        ${m.trades.length} deal${m.trades.length === 1 ? '' : 's'} · net ${(m.components.trade_net.value >= 0 ? '+' : '')}${w1(m.components.trade_net.value)} WAR after the deal</div>
-      ${m.trades.map(t => `<div style="padding:5px 0;border-bottom:1px solid var(--parchment-deep);font-size:var(--text-sm)">
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-muted);font-family:var(--font-mono);font-size:10px">
-          ${t.date.slice(5)} · with ${escHtml(t.partner)}</span>
-          <span style="font-family:var(--font-stat);color:${t.net >= 0 ? RC_GREEN : RC_CLAY}">${t.net >= 0 ? '+' : ''}${t.net.toFixed(1)}</span></div>
-        <div style="color:var(--ink)">in: ${t.in.map(p => escHtml(p.player) + ' <span style="color:var(--ink-muted)">' + p.war.toFixed(1) + '</span>').join(', ') || '—'}</div>
-        <div style="color:var(--ink-muted)">out: ${t.out.map(p => escHtml(p.player) + ' ' + p.war.toFixed(1)).join(', ') || '—'}</div>
-      </div>`).join('') || '<div style="color:var(--ink-muted);font-size:var(--text-sm)">No trades.</div>'}</div>`;
+      <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">${m.trades.length} deal${m.trades.length === 1 ? '' : 's'} · net ${rcSigned(C.trade_net.value)} WAR after the deal</div>
+      ${rcTradesTable(m)}</div>`;
 
-  const kp = m.keepers;
+  const kp = m.keepers, kept = kp.mode === 'kept';
   const heldSorted = [...kp.held].sort((a, b) => (b.war || 0) - (a.war || 0) || (b.price || 0) - (a.price || 0));
-  const capLine = i => i === kp.cap - 1 ? '2px solid var(--board)' : '1px solid var(--parchment-deep)';
-  const keeperRows = heldSorted.slice(0, 14).map((r, i) => `<tr style="${i < kp.cap ? '' : 'opacity:.55'}">
-      <td style="padding:3px 10px;border-bottom:${capLine(i)}">${escHtml(r.player)}
-        <span style="color:var(--ink-muted);font-size:10px">${escHtml(r.mlb || '')}</span></td>
+  const capLine = i => (!kept && i === kp.cap - 1) ? '2px solid var(--board)' : '1px solid var(--parchment-deep)';
+  const keeperRows = heldSorted.slice(0, 14).map((r, i) => `<tr style="${(!kept && i >= kp.cap) ? 'opacity:.55' : ''}">
+      <td style="padding:3px 10px;border-bottom:${capLine(i)}">${escHtml(r.player)} <span style="color:var(--ink-muted);font-size:10px">${escHtml(r.mlb || '')}</span></td>
       <td style="padding:3px 10px;border-bottom:${capLine(i)};text-align:right;font-variant-numeric:tabular-nums">${r.price != null ? '$' + r.price : '—'}</td>
-      <td style="padding:3px 10px;border-bottom:${capLine(i)};text-align:right;font-variant-numeric:tabular-nums;
-        color:${(r.war || 0) < 0 ? RC_CLAY : 'var(--ink)'}">${r.war != null ? r.war.toFixed(1) : '—'}</td>
+      <td style="padding:3px 10px;border-bottom:${capLine(i)};text-align:right;font-variant-numeric:tabular-nums;color:${(r.war || 0) < 0 ? RC_CLAY : 'var(--ink)'}">${r.war != null ? r.war.toFixed(1) : '—'}</td>
       <td style="padding:3px 10px;border-bottom:${capLine(i)};color:var(--ink-muted);font-size:var(--text-xs)">through ${r.last_year}</td>
     </tr>`).join('');
-  const keepers = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:4px">${RC.year + 1} Keeper Outlook</h4>
-      <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">
-        ${kp.held.length} contracts are eligible for ${RC.year + 1}, $${kp.held_cost} in all; the rules allow ${kp.cap} keepers.
-        Sorted by what each returned <em>for this manager</em> in ${RC.year} — a midseason arrival shows only his time here — with the line marking
-        the ${kp.cap} the ledger counts: $${kp.best_cost} for ${w1(kp.best_war)} WAR.</div>
+  const keeperNote = kept
+    ? `The ${kp.held.length} contract${kp.held.length === 1 ? '' : 's'} he carried into ${kp.into}: $${kp.held_cost} for ${w1(kp.best_war)} WAR of ${RC.year} production <em>for this manager</em>.`
+    : `${kp.held.length} contracts are eligible for ${kp.into}, $${kp.held_cost} in all; the rules allow ${kp.cap} keepers.
+       Sorted by what each returned <em>for this manager</em> in ${RC.year} — a midseason arrival shows only his time here — with the line marking
+       the ${kp.cap} the ledger counts: $${kp.best_cost} for ${w1(kp.best_war)} WAR.`;
+  const keepers = `<div><h4 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:4px">${kept ? 'Kept Into ' + kp.into : kp.into + ' Keeper Outlook'}</h4>
+      <div style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:6px">${keeperNote}</div>
       <table style="border-collapse:collapse;width:100%;max-width:520px;font-size:var(--text-sm)">
         <tr style="text-align:left;color:var(--ink-muted);font-family:var(--font-mono);font-size:10px">
           <th style="padding:3px 10px">PLAYER</th><th style="padding:3px 10px;text-align:right">PRICE</th>
           <th style="padding:3px 10px;text-align:right">${RC.year} WAR</th><th style="padding:3px 10px">TERM</th></tr>
-        ${keeperRows || '<tr><td style="padding:6px 10px;color:var(--ink-muted)">No contracts carry past ' + RC.year + '.</td></tr>'}
+        ${keeperRows || '<tr><td style="padding:6px 10px;color:var(--ink-muted)">' + (kept ? 'No keepers recorded.' : 'No contracts carry past ' + RC.year + '.') + '</td></tr>'}
       </table>
       ${kp.expiring.length ? `<div style="margin-top:var(--space-xs);color:var(--ink-muted);font-size:var(--text-xs)">
         Expiring: ${kp.expiring.slice(0, 8).map(r => escHtml(r.player) + (r.price != null ? ' $' + r.price : '')).join(' · ')}</div>` : ''}</div>`;
+
   const kindLabel = p => p.kind === 'keep' ? 'kept $' + (p.price != null ? p.price : '?')
     : p.kind === 'draft' ? 'drafted $' + (p.price != null ? p.price : '?')
     : p.kind === 'trade' ? 'trade'
     : p.kind === 'add' ? (p.pre ? 'pre-season claim' : 'waiver') + (p.price ? ' $' + p.price : '') : '—';
-
-  const th = (label, key, right) => `<th data-key="${key}"${key === 'war' ? ' data-dir="-1"' : ''} style="padding:4px 10px${right ? ';text-align:right' : ''}">${label}</th>`;
+  const th = (label, key, num) => `<th data-key="${key}" data-num="${num}"${key === 'war' ? ' data-dir="-1"' : ''} style="padding:4px 10px${num ? ';text-align:right' : ''}">${label}</th>`;
   const ledger = `<table class="rc-sort" style="border-collapse:collapse;width:100%;font-size:var(--text-sm)">
       <tr style="text-align:left;color:var(--ink-muted);font-family:var(--font-mono);font-size:10px">
-        ${th('PLAYER', 'name')}${th('WAR', 'war', 1)}${th('LEAGUE', 'rank', 1)}${th('ACQUIRED', 'kind')}
-        ${th('DAYS', 'days', 1)}${th('HELD', 'from')}<th style="padding:4px 10px">CATEGORIES</th></tr>
-      ${m.players.map(p => `<tr data-war="${p.war}" data-rank="${p.lg_rank}" data-days="${p.days}" data-from="${p.from || ''}"
+        ${th('PLAYER', 'name', 0)}${th('WAR', 'war', 1)}${th('LEAGUE', 'rank', 1)}${th('ACQUIRED', 'kind', 0)}
+        ${th('DAYS', 'days', 1)}${th('HELD', 'from', 0)}<th style="padding:4px 10px">CATEGORIES</th></tr>
+      ${m.players.map(p => `<tr data-sort data-war="${p.war}" data-rank="${p.lg_rank}" data-days="${p.days}" data-from="${p.from || ''}"
           data-name="${rcTipAttr(escHtml(p.player))}" data-kind="${rcTipAttr(kindLabel(p))}">
         <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep)">${escHtml(p.player)}</td>
-        <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);text-align:right;font-family:var(--font-stat);
-          font-variant-numeric:tabular-nums;color:${p.war < 0 ? RC_CLAY : 'var(--ink)'}">${p.war.toFixed(2)}</td>
+        <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);text-align:right;font-family:var(--font-stat);font-variant-numeric:tabular-nums;color:${p.war < 0 ? RC_CLAY : 'var(--ink)'}">${p.war.toFixed(2)}</td>
         <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);text-align:right;color:var(--ink-muted);font-size:var(--text-xs)">#${p.lg_rank}</td>
         <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);color:var(--ink-muted);font-size:var(--text-xs)">${kindLabel(p)}</td>
         <td style="padding:3px 10px;border-bottom:1px solid var(--parchment-deep);text-align:right;color:var(--ink-muted)">${p.days}</td>
@@ -1229,7 +1328,6 @@ function renderReportCards() {
           ${p.up.map(u => u[0] + ' +' + u[1].toFixed(1)).join(', ')}${p.down.length ? '<span style="color:' + RC_CLAY + '"> · ' + p.down.map(u => u[0] + ' ' + u[1].toFixed(1)).join(', ') + '</span>' : ''}</td>
       </tr>`).join('')}</table>`;
 
-  // best and worst value picks, named under the scatter
   const dpw = RC.league.dollars_per_win || 4.5;
   const picks = (m.draft.detail || []).filter(p => p.cost != null);
   const resid = p => p.war - p.cost / dpw;
@@ -1238,45 +1336,52 @@ function renderReportCards() {
   const pickNote = bestPick ? ` Best value: ${escHtml(bestPick.player)}, $${bestPick.cost} for ${bestPick.war.toFixed(1)} WAR.` +
     ` Furthest below the line: ${escHtml(worstPick.player)}, $${worstPick.cost} for ${worstPick.war.toFixed(1)}.` : '';
 
-  const sec = (title, inner, note) => `<div style="margin-top:var(--space-lg)">
+  const sec = (title, inner, note, id) => `<div style="margin-top:var(--space-lg)"${id ? ` id="${id}"` : ''}>
       <h3 style="font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:2px">${title}</h3>
       ${note ? `<p style="color:var(--ink-muted);font-size:var(--text-sm);margin-bottom:var(--space-xs)">${note}</p>` : ''}
       ${inner}</div>`;
 
   body.innerHTML =
-    `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-md)">${chips}</div>` +
-    head +
-    sec('The Ledger', bars, `Where ${escHtml(m.manager)} stands among the ${n} managers. WAR is category wins above replacement; each row is his number and his rank, not a grade. Draft, wire and trade value is credited to the stint that earned it.`) +
-    sec('Elo Through the Season', rcEloChart(m.manager, RC.year), 'Weekly Elo, 2022-era ratings, K=20.') +
+    years +
+    sec('The League', rcSummaryTable(RC, sel), null) +
+    `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:var(--space-lg) 0 var(--space-md)">${chips}</div>` +
+    `<div id="rc-card">` + head +
+    sec('The Ledger', bars, `Where ${escHtml(m.manager)} stands among the ${n} managers. Each row is his number and his rank, not a grade. Draft, wire and trade value is credited to the stint that earned it.`) +
+    sec('Category Record', rcCategoryProfile(m), `How the ${m.reg_weeks || ''} regular-season matchups broke down, category by category.`) +
+    sec('Elo Through the Season', rcEloChart(m.manager, RC.year), 'Weekly Elo, 2022-era ratings, K=20. Hover a faint line to see whose it is.') +
     sec('Draft Price vs. Return', rcDraftScatter(m, RC),
       `$${m.draft.spend} across ${m.draft.picks} picks returned ${w1(m.draft.war)} WAR` +
       (m.draft.per_win ? ` — $${m.draft.per_win} per win against a league average of $${RC.league.dollars_per_win}` : '') +
       '. Points above the dashed line beat the going rate; hover any dot for the player, price and return.' + pickNote) +
-    sec('Wire &amp; Trades', `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-lg)">${wire}${trades}</div>`,
+    sec('Wire &amp; Trades', `<div class="rc-wt">${wire}${trades}</div>`,
       'Value is credited to the stint that earned it: a traded player’s later production counts for his new team.') +
     sec('Keepers', keepers) +
     sec('Every Player', `<details><summary style="cursor:pointer;color:var(--board);font-family:var(--font-stat)">
         Show all ${m.players.length} player-stints</summary><div style="overflow-x:auto;margin-top:var(--space-xs)">${ledger}</div></details>`,
-      'Every stint on this roster, best to worst.');
+      'Every stint on this roster, best to worst.') +
+    `<p style="margin-top:var(--space-lg);color:var(--ink-muted);font-size:var(--text-xs);font-family:var(--font-mono)">
+       Link to this card: <a href="#report-cards/${RC.year}/${rcSlug(m.manager)}" style="color:var(--board)">#report-cards/${RC.year}/${rcSlug(m.manager)}</a></p></div>`;
 
   rcBindTips(body);
   body.querySelectorAll('table.rc-sort th[data-key]').forEach(h => h.onclick = () => {
     const table = h.closest('table'), key = h.dataset.key, tbody = table.tBodies[0];
-    const numeric = ['war', 'rank', 'days'].includes(key);
+    const numeric = h.dataset.num === '1';
     // first click: numbers high-to-low, names A-to-Z; a second click flips it
     const dir = h.dataset.dir ? -parseInt(h.dataset.dir, 10) : (numeric ? -1 : 1);
     table.querySelectorAll('th').forEach(x => x.removeAttribute('data-dir'));
     h.dataset.dir = String(dir);
-    const rows = [...tbody.querySelectorAll('tr[data-war]')];
+    const rows = [...tbody.querySelectorAll('tr[data-sort]')];
     rows.sort((x, y) => numeric ? dir * (parseFloat(x.dataset[key]) - parseFloat(y.dataset[key]))
-                                : dir * x.dataset[key].localeCompare(y.dataset[key]));   // -1 = high to low
+                                : dir * String(x.dataset[key]).localeCompare(String(y.dataset[key])));   // -1 = high to low
     rows.forEach(r => tbody.appendChild(r));
   });
-
-  body.querySelectorAll('.rc-chip').forEach(b => b.onclick = () => {
-    window.__rcManager = b.dataset.m; renderReportCards();
-    document.getElementById('page-report-cards').scrollIntoView({ behavior: 'instant', block: 'start' });
-  });
+  body.querySelectorAll('.rc-chip').forEach(b => b.onclick = () => rcGo(year, b.dataset.m));
+  body.querySelectorAll('.rc-summary tr[data-sort]').forEach(r => r.onclick = () => rcGo(year, r.dataset.manager));
+  body.querySelectorAll('.rc-year').forEach(b => b.onclick = () => rcGo(parseInt(b.dataset.y, 10), sel));
+  if (window.__rcSlug && window.__rcScrollCard) {
+    document.getElementById('rc-card').scrollIntoView({ behavior: 'instant', block: 'start' });
+  }
+  window.__rcScrollCard = true;   // the first render lands on the league table; later picks jump to the card
 }
 
 
@@ -1302,7 +1407,10 @@ function initRouter() {
   const secLinks = document.querySelectorAll('#section-nav a[data-section]');
   const subnav = document.getElementById('subnav');
 
-  function navigate(page) {
+  function navigate(raw) {
+    const parts = String(raw || 'home').split('/');
+    let page = parts[0];
+    const rest = parts.slice(1);
     if (!sectionOf[page]) page = 'home';
     const sec = sectionOf[page];
     document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
@@ -1319,7 +1427,7 @@ function initRouter() {
     }));
 
     if (page === 'newsletter') ensureNewsletters();
-    if (page === 'report-cards') ensureReportCards();
+    if (page === 'report-cards') rcRoute(rest);
     window.scrollTo({ top: 0, behavior: 'instant' });
     setTimeout(triggerVisible, 50);
   }
